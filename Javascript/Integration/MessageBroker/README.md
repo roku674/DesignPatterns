@@ -1,12 +1,13 @@
-# MessageBroker Pattern
+# Message Broker Pattern
 
 ## Intent
-MessageBroker pattern implementation for production systems.
+Central component that handles routing and transformation of messages between senders and receivers.
 
 ## When to Use
-- Integration architecture scenarios
-- Scalable distributed systems
-- Enterprise applications
+- Decouple message producers from consumers
+- Content-based routing needed
+- Message transformation required
+- Multiple communication patterns
 
 ## Run
 ```bash

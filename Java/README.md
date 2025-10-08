@@ -1,12 +1,34 @@
-# Gang of Four Design Patterns in Java
+# Comprehensive Design Patterns in Java
 
-This repository contains complete, production-ready implementations of all 23 Gang of Four design patterns in Java.
+This repository contains complete, production-ready implementations of **225+ design patterns** in Java, including all Gang of Four patterns plus Enterprise, Concurrency, Integration, Cloud, and Microservices patterns.
 
 ## Quick Navigation
 
-📂 **[IMPLEMENTATION_SUMMARY.md](IMPLEMENTATION_SUMMARY.md)** - Complete detailed documentation of all patterns
+📂 **[IMPLEMENTATION_SUMMARY.md](IMPLEMENTATION_SUMMARY.md)** - Gang of Four patterns documentation
 
-## Pattern Categories
+## All Pattern Categories (225 Patterns Total)
+
+### Gang of Four Patterns (23)
+✅ All 23 classic design patterns fully implemented
+
+### Enterprise Application Patterns (51)
+✅ Transaction Script, Domain Model, Repository, Unit of Work, and 47 more
+
+### Concurrency Patterns (17)
+✅ Thread Pool, Monitor Object, Active Object, Circuit Breaker, and 13 more
+
+### Enterprise Integration Patterns (62)
+✅ Message Router, Message Filter, Aggregator, Splitter, and 58 more
+
+### Cloud Design Patterns (42)
+✅ Circuit Breaker, Bulkhead, Retry, Cache-Aside, CQRS, and 37 more
+
+### Microservices Patterns (30)
+✅ API Gateway, Service Registry, Saga, Event Sourcing, and 26 more
+
+---
+
+## Classic GoF Pattern Categories
 
 ### Creational Patterns (5)
 1. [Singleton](Creational/Singleton/) - Ensure only one instance exists
@@ -54,13 +76,15 @@ java Main
 
 ## Features
 
-✅ All 23 GoF patterns implemented
+✅ **225+ patterns** across 6 categories
+✅ All 23 GoF patterns + Enterprise/Cloud/Microservices
 ✅ Production-ready code quality
 ✅ Real-world, practical examples
-✅ Comprehensive documentation
+✅ Comprehensive documentation (README per pattern)
 ✅ Java 11+ compatible
 ✅ SOLID principles
 ✅ Javadoc comments
+✅ No external dependencies for core patterns
 
 ## Learn More
 
@@ -81,33 +105,37 @@ See **[IMPLEMENTATION_SUMMARY.md](IMPLEMENTATION_SUMMARY.md)** for:
 ```
 Java/
 ├── README.md (this file)
-├── IMPLEMENTATION_SUMMARY.md (detailed documentation)
-├── Creational/
-│   ├── Singleton/
-│   ├── FactoryMethod/
-│   ├── AbstractFactory/
-│   ├── Builder/
-│   └── Prototype/
-├── Structural/
-│   ├── Adapter/
-│   ├── Bridge/
-│   ├── Composite/
-│   ├── Decorator/
-│   ├── Facade/
-│   ├── Flyweight/
-│   └── Proxy/
-└── Behavioral/
-    ├── ChainOfResponsibility/
-    ├── Command/
-    ├── Interpreter/
-    ├── Iterator/
-    ├── Mediator/
-    ├── Memento/
-    ├── Observer/
-    ├── State/
-    ├── Strategy/
-    ├── TemplateMethod/
-    └── Visitor/
+├── IMPLEMENTATION_SUMMARY.md (GoF patterns documentation)
+├── Creational/ (5 patterns)
+├── Structural/ (7 patterns)
+├── Behavioral/ (11 patterns)
+├── Enterprise/ (51 patterns)
+│   ├── TransactionScript/
+│   ├── DomainModel/
+│   ├── RepositoryPattern/
+│   ├── UnitOfWork/
+│   └── ... (47 more)
+├── Concurrency/ (17 patterns)
+│   ├── ThreadPool/
+│   ├── MonitorObject/
+│   ├── ActiveObject/
+│   └── ... (14 more)
+├── Integration/ (62 patterns)
+│   ├── MessageRouter/
+│   ├── MessageFilter/
+│   ├── Aggregator/
+│   └── ... (59 more)
+├── Cloud/ (42 patterns)
+│   ├── CircuitBreaker/
+│   ├── Bulkhead/
+│   ├── CacheAside/
+│   ├── CQRS/
+│   └── ... (38 more)
+└── Microservices/ (30 patterns)
+    ├── ApiGateway/
+    ├── ServiceRegistry/
+    ├── Saga/
+    └── ... (27 more)
 ```
 
 ## Credits
