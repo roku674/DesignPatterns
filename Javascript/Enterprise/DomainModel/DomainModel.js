@@ -2,225 +2,257 @@
  * Domain Model Pattern
  *
  * An object model of the domain that incorporates both behavior and data.
- * Rich domain objects contain business logic and rules.
+ * Rich domain objects with business logic encapsulated within them.
+ *
+ * Use when:
+ * - You have complex business logic
+ * - Domain logic is intricate and changes frequently
+ * - You want object-oriented modeling of business rules
  */
 
 /**
- * Money Value Object
- */
-class Money {
-  constructor(amount, currency = 'USD') {
-    this.amount = amount;
-    this.currency = currency;
-  }
-
-  add(other) {
-    if (this.currency !== other.currency) {
-      throw new Error('Cannot add different currencies');
-    }
-    return new Money(this.amount + other.amount, this.currency);
-  }
-
-  subtract(other) {
-    if (this.currency !== other.currency) {
-      throw new Error('Cannot subtract different currencies');
-    }
-    return new Money(this.amount - other.amount, this.currency);
-  }
-
-  multiply(factor) {
-    return new Money(this.amount * factor, this.currency);
-  }
-
-  isGreaterThan(other) {
-    if (this.currency !== other.currency) {
-      throw new Error('Cannot compare different currencies');
-    }
-    return this.amount > other.amount;
-  }
-
-  toString() {
-    return `${this.currency} ${this.amount.toFixed(2)}`;
-  }
-}
-
-/**
- * Account Entity
+ * Account entity with business logic
  */
 class Account {
-  constructor(id, owner, balance = new Money(0)) {
-    this.id = id;
-    this.owner = owner;
+  /**
+   * @param {string} accountNumber
+   * @param {number} balance
+   * @param {string} accountType
+   */
+  constructor(accountNumber, balance = 0, accountType = 'CHECKING') {
+    this.accountNumber = accountNumber;
     this.balance = balance;
+    this.accountType = accountType;
     this.transactions = [];
+    this.overdraftLimit = accountType === 'CHECKING' ? 500 : 0;
+  }
+
+  /**
+   * Deposit money into account
+   * @param {number} amount
+   * @throws {Error} if amount is negative
+   */
+  deposit(amount) {
+    if (amount <= 0) {
+      throw new Error('Deposit amount must be positive');
+    }
+    this.balance += amount;
+    this.transactions.push({
+      type: 'DEPOSIT',
+      amount,
+      date: new Date(),
+      balance: this.balance
+    });
   }
 
   /**
    * Withdraw money from account
+   * @param {number} amount
+   * @throws {Error} if insufficient funds
    */
   withdraw(amount) {
-    if (this.balance.isGreaterThan(amount) || this.balance.amount === amount.amount) {
-      this.balance = this.balance.subtract(amount);
-      this.recordTransaction('withdrawal', amount);
-    } else {
+    if (amount <= 0) {
+      throw new Error('Withdrawal amount must be positive');
+    }
+
+    if (!this.canWithdraw(amount)) {
       throw new Error('Insufficient funds');
     }
+
+    this.balance -= amount;
+    this.transactions.push({
+      type: 'WITHDRAWAL',
+      amount,
+      date: new Date(),
+      balance: this.balance
+    });
   }
 
   /**
-   * Deposit money to account
+   * Check if withdrawal is allowed
+   * @param {number} amount
+   * @returns {boolean}
    */
-  deposit(amount) {
-    this.balance = this.balance.add(amount);
-    this.recordTransaction('deposit', amount);
+  canWithdraw(amount) {
+    return (this.balance + this.overdraftLimit) >= amount;
   }
 
   /**
    * Transfer money to another account
+   * @param {Account} toAccount
+   * @param {number} amount
    */
-  transferTo(targetAccount, amount) {
+  transfer(toAccount, amount) {
     this.withdraw(amount);
-    targetAccount.deposit(amount);
-    this.recordTransaction('transfer_out', amount, targetAccount.id);
-    targetAccount.recordTransaction('transfer_in', amount, this.id);
+    toAccount.deposit(amount);
   }
 
-  recordTransaction(type, amount, relatedAccountId = null) {
-    this.transactions.push({
-      type,
-      amount: amount.toString(),
-      relatedAccount: relatedAccountId,
-      timestamp: new Date()
-    });
+  /**
+   * Calculate interest based on account type
+   * @returns {number}
+   */
+  calculateInterest() {
+    const rates = {
+      'SAVINGS': 0.02,
+      'CHECKING': 0.001,
+      'MONEY_MARKET': 0.015
+    };
+    return this.balance * (rates[this.accountType] || 0);
   }
 
+  /**
+   * Get account statement
+   * @returns {Object}
+   */
   getStatement() {
     return {
-      accountId: this.id,
-      owner: this.owner,
-      balance: this.balance.toString(),
-      transactions: this.transactions
+      accountNumber: this.accountNumber,
+      accountType: this.accountType,
+      balance: this.balance,
+      transactions: [...this.transactions]
     };
   }
 }
 
 /**
- * Order Entity with complex business rules
- */
-class Order {
-  constructor(id, customer) {
-    this.id = id;
-    this.customer = customer;
-    this.items = [];
-    this.status = 'draft';
-    this.createdAt = new Date();
-  }
-
-  addItem(product, quantity) {
-    if (this.status !== 'draft') {
-      throw new Error('Cannot modify submitted order');
-    }
-
-    const existingItem = this.items.find(item => item.product.id === product.id);
-    if (existingItem) {
-      existingItem.quantity += quantity;
-    } else {
-      this.items.push(new OrderItem(product, quantity));
-    }
-  }
-
-  removeItem(productId) {
-    if (this.status !== 'draft') {
-      throw new Error('Cannot modify submitted order');
-    }
-    this.items = this.items.filter(item => item.product.id !== productId);
-  }
-
-  getTotal() {
-    let total = this.items.reduce((sum, item) => sum.add(item.getSubtotal()), new Money(0));
-
-    // Apply customer discounts
-    if (this.customer.isPremium()) {
-      total = total.multiply(0.9); // 10% discount
-    }
-
-    return total;
-  }
-
-  submit() {
-    if (this.items.length === 0) {
-      throw new Error('Cannot submit empty order');
-    }
-    if (this.status !== 'draft') {
-      throw new Error('Order already submitted');
-    }
-    this.status = 'submitted';
-    this.submittedAt = new Date();
-  }
-
-  approve() {
-    if (this.status !== 'submitted') {
-      throw new Error('Can only approve submitted orders');
-    }
-    this.status = 'approved';
-    this.approvedAt = new Date();
-  }
-
-  ship() {
-    if (this.status !== 'approved') {
-      throw new Error('Can only ship approved orders');
-    }
-    this.status = 'shipped';
-    this.shippedAt = new Date();
-  }
-}
-
-/**
- * Order Item Value Object
- */
-class OrderItem {
-  constructor(product, quantity) {
-    this.product = product;
-    this.quantity = quantity;
-  }
-
-  getSubtotal() {
-    return this.product.price.multiply(this.quantity);
-  }
-}
-
-/**
- * Product Entity
- */
-class Product {
-  constructor(id, name, price) {
-    this.id = id;
-    this.name = name;
-    this.price = price;
-  }
-}
-
-/**
- * Customer Entity
+ * Customer entity with domain logic
  */
 class Customer {
-  constructor(id, name, email, membershipLevel = 'standard') {
-    this.id = id;
+  /**
+   * @param {string} customerId
+   * @param {string} name
+   * @param {string} email
+   */
+  constructor(customerId, name, email) {
+    this.customerId = customerId;
     this.name = name;
     this.email = email;
-    this.membershipLevel = membershipLevel;
+    this.accounts = new Map();
+    this.creditScore = 700;
   }
 
-  isPremium() {
-    return this.membershipLevel === 'premium';
+  /**
+   * Add account to customer
+   * @param {Account} account
+   */
+  addAccount(account) {
+    this.accounts.set(account.accountNumber, account);
+  }
+
+  /**
+   * Get total balance across all accounts
+   * @returns {number}
+   */
+  getTotalBalance() {
+    return Array.from(this.accounts.values())
+      .reduce((sum, account) => sum + account.balance, 0);
+  }
+
+  /**
+   * Check if customer is eligible for loan
+   * @param {number} amount
+   * @returns {boolean}
+   */
+  isEligibleForLoan(amount) {
+    const totalBalance = this.getTotalBalance();
+    const hasGoodCredit = this.creditScore >= 650;
+    const hasCollateral = totalBalance >= amount * 0.2;
+
+    return hasGoodCredit && hasCollateral;
+  }
+
+  /**
+   * Update credit score based on payment history
+   * @param {boolean} onTimePayment
+   */
+  updateCreditScore(onTimePayment) {
+    if (onTimePayment) {
+      this.creditScore = Math.min(850, this.creditScore + 5);
+    } else {
+      this.creditScore = Math.max(300, this.creditScore - 25);
+    }
   }
 }
 
-module.exports = {
-  Money,
-  Account,
-  Order,
-  OrderItem,
-  Product,
-  Customer
-};
+/**
+ * Loan entity with complex business rules
+ */
+class Loan {
+  /**
+   * @param {string} loanId
+   * @param {Customer} customer
+   * @param {number} principal
+   * @param {number} interestRate
+   * @param {number} termMonths
+   */
+  constructor(loanId, customer, principal, interestRate, termMonths) {
+    this.loanId = loanId;
+    this.customer = customer;
+    this.principal = principal;
+    this.interestRate = interestRate;
+    this.termMonths = termMonths;
+    this.remainingBalance = principal;
+    this.payments = [];
+    this.status = 'ACTIVE';
+  }
+
+  /**
+   * Calculate monthly payment amount
+   * @returns {number}
+   */
+  calculateMonthlyPayment() {
+    const monthlyRate = this.interestRate / 12 / 100;
+    const numerator = this.principal * monthlyRate * Math.pow(1 + monthlyRate, this.termMonths);
+    const denominator = Math.pow(1 + monthlyRate, this.termMonths) - 1;
+    return numerator / denominator;
+  }
+
+  /**
+   * Make loan payment
+   * @param {number} amount
+   * @throws {Error} if payment is invalid
+   */
+  makePayment(amount) {
+    if (this.status !== 'ACTIVE') {
+      throw new Error('Loan is not active');
+    }
+
+    const monthlyPayment = this.calculateMonthlyPayment();
+    if (amount < monthlyPayment * 0.5) {
+      throw new Error('Payment below minimum amount');
+    }
+
+    const interest = this.remainingBalance * (this.interestRate / 12 / 100);
+    const principalPayment = amount - interest;
+
+    this.remainingBalance = Math.max(0, this.remainingBalance - principalPayment);
+    this.payments.push({
+      amount,
+      interest,
+      principal: principalPayment,
+      remainingBalance: this.remainingBalance,
+      date: new Date()
+    });
+
+    this.customer.updateCreditScore(true);
+
+    if (this.remainingBalance === 0) {
+      this.status = 'PAID_OFF';
+    }
+  }
+
+  /**
+   * Check if loan is in default
+   * @returns {boolean}
+   */
+  isInDefault() {
+    if (this.payments.length === 0) return false;
+
+    const lastPayment = this.payments[this.payments.length - 1];
+    const daysSinceLastPayment = (Date.now() - lastPayment.date.getTime()) / (1000 * 60 * 60 * 24);
+
+    return daysSinceLastPayment > 60;
+  }
+}
+
+export { Account, Customer, Loan };
