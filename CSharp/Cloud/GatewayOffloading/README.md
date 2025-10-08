@@ -1,0 +1,13 @@
+# GatewayOffloading Pattern
+
+## Intent
+Offloads shared functionality to gateway proxy
+
+## Category
+Cloud Design Pattern
+
+## How to Run
+```bash
+cd /home/roku674/Alex/DesignPatterns/CSharp/Cloud/GatewayOffloading
+dotnet run
+```
