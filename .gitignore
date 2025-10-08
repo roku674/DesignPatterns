@@ -1,0 +1,61 @@
+# Project tracking files (do not commit)
+PROJECT_WORK.md
+PROJECT_CONFIDENTIAL.md
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Windows Zone Identifier files
+*:*
+
+# IDE and Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Language-specific ignores
+## C#
+bin/
+obj/
+*.user
+*.suo
+*.cache
+*.dll
+*.exe
+*.pdb
+*.log
+
+## Java
+*.class
+*.jar
+*.war
+*.ear
+target/
+.gradle/
+build/
+
+## JavaScript
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+.npm
+
+# OS files
+Thumbs.db
+Desktop.ini
+*.env
+*.tmp
+*.temp
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.pyc
