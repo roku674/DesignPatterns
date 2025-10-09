@@ -1,104 +1,318 @@
 /**
- * Chain of Responsibility Pattern - Customer Support System
+ * Chain of Responsibility Pattern - HTTP Request Validation Pipeline
  *
- * The Chain of Responsibility pattern lets you pass requests along a chain
- * of handlers. Each handler decides either to process the request or to pass
- * it to the next handler in the chain.
+ * Real-world implementation of request validation middleware chain.
+ * Each handler validates a specific aspect of the request and passes
+ * it along if valid, or rejects with error details.
  */
 
 /**
- * Handler: Support Handler
- * Abstract base class for all support handlers
+ * Base Handler for request validation
  */
-class SupportHandler {
+class ValidationHandler {
   constructor() {
     this.nextHandler = null;
   }
 
   setNext(handler) {
     this.nextHandler = handler;
-    return handler; // Return handler for chaining
+    return handler;
   }
 
-  handle(request) {
+  async handle(request) {
     if (this.nextHandler) {
-      return this.nextHandler.handle(request);
+      return await this.nextHandler.handle(request);
     }
-
-    return `No handler found for ${request.type} with priority ${request.priority}`;
+    return { valid: true, request, errors: [] };
   }
 }
 
 /**
- * Concrete Handler: Level 1 Support (Basic Issues)
+ * Validates authentication token
  */
-class Level1Support extends SupportHandler {
-  handle(request) {
-    if (request.priority === 'low' && request.type === 'technical') {
-      return `[Level 1 Support] Handling ${request.type} issue: "${request.description}"`;
+class AuthenticationHandler extends ValidationHandler {
+  async handle(request) {
+    const errors = [];
+
+    if (!request.headers || !request.headers.authorization) {
+      errors.push({ field: 'authorization', message: 'Missing authorization header' });
+      return { valid: false, request, errors };
     }
 
-    console.log(`[Level 1 Support] Cannot handle - escalating...`);
-    return super.handle(request);
+    const token = request.headers.authorization.split(' ')[1];
+
+    if (!token || token.length < 20) {
+      errors.push({ field: 'authorization', message: 'Invalid token format' });
+      return { valid: false, request, errors };
+    }
+
+    // Simulate async token validation
+    const isValidToken = await this.validateToken(token);
+
+    if (!isValidToken) {
+      errors.push({ field: 'authorization', message: 'Invalid or expired token' });
+      return { valid: false, request, errors };
+    }
+
+    request.user = this.decodeToken(token);
+    return await super.handle(request);
+  }
+
+  async validateToken(token) {
+    // Simulate async validation (e.g., database lookup)
+    return new Promise(resolve => {
+      setTimeout(() => {
+        resolve(token.startsWith('valid_'));
+      }, 10);
+    });
+  }
+
+  decodeToken(token) {
+    // Extract user info from token
+    return {
+      id: token.slice(-8),
+      role: token.includes('admin') ? 'admin' : 'user'
+    };
   }
 }
 
 /**
- * Concrete Handler: Level 2 Support (Technical Issues)
+ * Validates request body schema
  */
-class Level2Support extends SupportHandler {
-  handle(request) {
-    if (request.priority === 'medium' && request.type === 'technical') {
-      return `[Level 2 Support] Handling ${request.type} issue: "${request.description}"`;
+class SchemaValidationHandler extends ValidationHandler {
+  constructor(schema) {
+    super();
+    this.schema = schema;
+  }
+
+  async handle(request) {
+    const errors = [];
+
+    if (!request.body || typeof request.body !== 'object') {
+      errors.push({ field: 'body', message: 'Request body is required' });
+      return { valid: false, request, errors };
     }
 
-    console.log(`[Level 2 Support] Cannot handle - escalating...`);
-    return super.handle(request);
+    // Validate required fields
+    if (this.schema.required) {
+      for (const field of this.schema.required) {
+        if (!(field in request.body)) {
+          errors.push({ field, message: `Required field '${field}' is missing` });
+        }
+      }
+    }
+
+    // Validate field types
+    if (this.schema.properties) {
+      for (const [field, rules] of Object.entries(this.schema.properties)) {
+        if (field in request.body) {
+          const value = request.body[field];
+
+          if (rules.type && typeof value !== rules.type) {
+            errors.push({
+              field,
+              message: `Field '${field}' must be of type ${rules.type}`
+            });
+          }
+
+          if (rules.minLength && value.length < rules.minLength) {
+            errors.push({
+              field,
+              message: `Field '${field}' must be at least ${rules.minLength} characters`
+            });
+          }
+
+          if (rules.pattern && !new RegExp(rules.pattern).test(value)) {
+            errors.push({
+              field,
+              message: `Field '${field}' does not match required pattern`
+            });
+          }
+        }
+      }
+    }
+
+    if (errors.length > 0) {
+      return { valid: false, request, errors };
+    }
+
+    return await super.handle(request);
   }
 }
 
 /**
- * Concrete Handler: Level 3 Support (Complex Technical)
+ * Validates rate limiting
  */
-class Level3Support extends SupportHandler {
-  handle(request) {
-    if (request.priority === 'high' && request.type === 'technical') {
-      return `[Level 3 Support] Handling critical ${request.type} issue: "${request.description}"`;
+class RateLimitHandler extends ValidationHandler {
+  constructor(maxRequests = 100, windowMs = 60000) {
+    super();
+    this.maxRequests = maxRequests;
+    this.windowMs = windowMs;
+    this.requests = new Map();
+  }
+
+  async handle(request) {
+    const errors = [];
+    const userId = request.user?.id || request.ip || 'anonymous';
+    const now = Date.now();
+
+    if (!this.requests.has(userId)) {
+      this.requests.set(userId, []);
     }
 
-    console.log(`[Level 3 Support] Cannot handle - escalating...`);
-    return super.handle(request);
+    const userRequests = this.requests.get(userId);
+
+    // Remove old requests outside the window
+    const validRequests = userRequests.filter(
+      timestamp => now - timestamp < this.windowMs
+    );
+
+    this.requests.set(userId, validRequests);
+
+    if (validRequests.length >= this.maxRequests) {
+      const oldestRequest = Math.min(...validRequests);
+      const resetTime = new Date(oldestRequest + this.windowMs);
+
+      errors.push({
+        field: 'rateLimit',
+        message: `Rate limit exceeded. Try again after ${resetTime.toISOString()}`,
+        retryAfter: resetTime
+      });
+
+      return { valid: false, request, errors };
+    }
+
+    validRequests.push(now);
+    this.requests.set(userId, validRequests);
+
+    return await super.handle(request);
+  }
+
+  clearUserLimits(userId) {
+    this.requests.delete(userId);
+  }
+
+  resetAllLimits() {
+    this.requests.clear();
   }
 }
 
 /**
- * Concrete Handler: Billing Department
+ * Validates user permissions
  */
-class BillingSupport extends SupportHandler {
-  handle(request) {
-    if (request.type === 'billing') {
-      return `[Billing Support] Handling billing issue: "${request.description}"`;
+class PermissionHandler extends ValidationHandler {
+  constructor(requiredRole = 'user') {
+    super();
+    this.requiredRole = requiredRole;
+    this.roleHierarchy = { admin: 2, user: 1, guest: 0 };
+  }
+
+  async handle(request) {
+    const errors = [];
+
+    if (!request.user) {
+      errors.push({
+        field: 'permission',
+        message: 'User information not found in request'
+      });
+      return { valid: false, request, errors };
     }
 
-    console.log(`[Billing Support] Cannot handle - escalating...`);
-    return super.handle(request);
+    const userRoleLevel = this.roleHierarchy[request.user.role] || 0;
+    const requiredRoleLevel = this.roleHierarchy[this.requiredRole] || 0;
+
+    if (userRoleLevel < requiredRoleLevel) {
+      errors.push({
+        field: 'permission',
+        message: `Insufficient permissions. Required role: ${this.requiredRole}`
+      });
+      return { valid: false, request, errors };
+    }
+
+    return await super.handle(request);
   }
 }
 
 /**
- * Concrete Handler: Management (Last Resort)
+ * Sanitizes input to prevent XSS and injection attacks
  */
-class ManagementSupport extends SupportHandler {
-  handle(request) {
-    return `[Management] Handling escalated ${request.priority} priority ${request.type} issue: "${request.description}"`;
+class SanitizationHandler extends ValidationHandler {
+  async handle(request) {
+    if (request.body && typeof request.body === 'object') {
+      request.body = this.sanitizeObject(request.body);
+    }
+
+    if (request.query && typeof request.query === 'object') {
+      request.query = this.sanitizeObject(request.query);
+    }
+
+    return await super.handle(request);
+  }
+
+  sanitizeObject(obj) {
+    const sanitized = {};
+
+    for (const [key, value] of Object.entries(obj)) {
+      if (typeof value === 'string') {
+        sanitized[key] = this.sanitizeString(value);
+      } else if (typeof value === 'object' && value !== null) {
+        sanitized[key] = this.sanitizeObject(value);
+      } else {
+        sanitized[key] = value;
+      }
+    }
+
+    return sanitized;
+  }
+
+  sanitizeString(str) {
+    return str
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#x27;')
+      .replace(/\//g, '&#x2F;');
+  }
+}
+
+/**
+ * Request Validator - orchestrates the validation chain
+ */
+class RequestValidator {
+  constructor() {
+    this.handler = null;
+  }
+
+  buildChain(handlers) {
+    if (handlers.length === 0) {
+      throw new Error('At least one handler is required');
+    }
+
+    this.handler = handlers[0];
+    let current = this.handler;
+
+    for (let i = 1; i < handlers.length; i++) {
+      current = current.setNext(handlers[i]);
+    }
+
+    return this;
+  }
+
+  async validate(request) {
+    if (!this.handler) {
+      throw new Error('Validation chain not built. Call buildChain() first');
+    }
+
+    return await this.handler.handle(request);
   }
 }
 
 module.exports = {
-  SupportHandler,
-  Level1Support,
-  Level2Support,
-  Level3Support,
-  BillingSupport,
-  ManagementSupport
+  ValidationHandler,
+  AuthenticationHandler,
+  SchemaValidationHandler,
+  RateLimitHandler,
+  PermissionHandler,
+  SanitizationHandler,
+  RequestValidator
 };

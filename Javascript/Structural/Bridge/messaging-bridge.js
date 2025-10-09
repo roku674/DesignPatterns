@@ -1,244 +1,514 @@
 /**
- * Bridge Pattern - Messaging System Example
+ * Bridge Pattern - REAL Production Implementation
  *
- * The Bridge pattern separates abstraction from implementation so that
- * the two can vary independently. It uses composition over inheritance.
+ * Real data storage bridge with actual storage backends (memory, file system).
+ * Separates abstraction (data operations) from implementation (storage mechanism).
  */
 
-// ============= Implementation (Platform) =============
+const fs = require('fs');
+const path = require('path');
+const crypto = require('crypto');
+
+// ============= Implementation Interface =============
 
 /**
- * Implementation Interface: MessageSender
- * Defines the interface for all concrete implementations
+ * Storage implementation interface
  */
-class MessageSender {
-  sendMessage(recipient, message) {
-    throw new Error('Method sendMessage() must be implemented');
+class StorageImpl {
+  async save(key, value) {
+    throw new Error('Method save() must be implemented');
   }
 
-  sendBulkMessage(recipients, message) {
-    throw new Error('Method sendBulkMessage() must be implemented');
+  async load(key) {
+    throw new Error('Method load() must be implemented');
+  }
+
+  async delete(key) {
+    throw new Error('Method delete() must be implemented');
+  }
+
+  async exists(key) {
+    throw new Error('Method exists() must be implemented');
+  }
+
+  async list() {
+    throw new Error('Method list() must be implemented');
+  }
+
+  async clear() {
+    throw new Error('Method clear() must be implemented');
   }
 }
 
+// ============= Concrete Implementations =============
+
 /**
- * Concrete Implementation: EmailSender
+ * Memory Storage - Fast, volatile storage
  */
-class EmailSender extends MessageSender {
-  sendMessage(recipient, message) {
-    console.log(`[EMAIL] Sending to: ${recipient}`);
-    console.log(`[EMAIL] Subject: ${message.subject}`);
-    console.log(`[EMAIL] Body: ${message.body}`);
-    console.log(`[EMAIL] Attachments: ${message.attachments?.length || 0}`);
-    return { sent: true, method: 'email' };
+class MemoryStorage extends StorageImpl {
+  constructor() {
+    super();
+    this.data = new Map();
+    this.metadata = new Map();
   }
 
-  sendBulkMessage(recipients, message) {
-    console.log(`[EMAIL] Sending bulk email to ${recipients.length} recipients`);
-    recipients.forEach(recipient => {
-      console.log(`  - ${recipient}`);
+  async save(key, value) {
+    return new Promise((resolve) => {
+      this.data.set(key, value);
+      this.metadata.set(key, {
+        created: Date.now(),
+        modified: Date.now(),
+        size: JSON.stringify(value).length
+      });
+      resolve(true);
     });
-    console.log(`[EMAIL] Subject: ${message.subject}`);
-    return { sent: true, method: 'email', count: recipients.length };
-  }
-}
-
-/**
- * Concrete Implementation: SMSSender
- */
-class SMSSender extends MessageSender {
-  sendMessage(recipient, message) {
-    console.log(`[SMS] Sending to: ${recipient}`);
-    console.log(`[SMS] Message: ${message.text}`);
-    console.log(`[SMS] Length: ${message.text.length} characters`);
-    return { sent: true, method: 'sms' };
   }
 
-  sendBulkMessage(recipients, message) {
-    console.log(`[SMS] Sending bulk SMS to ${recipients.length} recipients`);
-    console.log(`[SMS] Message: ${message.text}`);
-    return { sent: true, method: 'sms', count: recipients.length };
-  }
-}
-
-/**
- * Concrete Implementation: SlackSender
- */
-class SlackSender extends MessageSender {
-  sendMessage(recipient, message) {
-    console.log(`[SLACK] Posting to channel: ${recipient}`);
-    console.log(`[SLACK] Message: ${message.text}`);
-    console.log(`[SLACK] Mentions: ${message.mentions?.join(', ') || 'none'}`);
-    return { sent: true, method: 'slack' };
-  }
-
-  sendBulkMessage(recipients, message) {
-    console.log(`[SLACK] Posting to ${recipients.length} channels`);
-    recipients.forEach(channel => {
-      console.log(`  - #${channel}`);
+  async load(key) {
+    return new Promise((resolve, reject) => {
+      if (!this.data.has(key)) {
+        reject(new Error(`Key not found: ${key}`));
+        return;
+      }
+      resolve(this.data.get(key));
     });
-    console.log(`[SLACK] Message: ${message.text}`);
-    return { sent: true, method: 'slack', count: recipients.length };
+  }
+
+  async delete(key) {
+    return new Promise((resolve) => {
+      const result = this.data.delete(key);
+      this.metadata.delete(key);
+      resolve(result);
+    });
+  }
+
+  async exists(key) {
+    return new Promise((resolve) => {
+      resolve(this.data.has(key));
+    });
+  }
+
+  async list() {
+    return new Promise((resolve) => {
+      resolve(Array.from(this.data.keys()));
+    });
+  }
+
+  async clear() {
+    return new Promise((resolve) => {
+      this.data.clear();
+      this.metadata.clear();
+      resolve(true);
+    });
+  }
+
+  async getMetadata(key) {
+    return this.metadata.get(key);
+  }
+
+  getSize() {
+    return this.data.size;
   }
 }
 
 /**
- * Concrete Implementation: PushNotificationSender
+ * File Storage - Persistent file-based storage
  */
-class PushNotificationSender extends MessageSender {
-  sendMessage(recipient, message) {
-    console.log(`[PUSH] Sending to device: ${recipient}`);
-    console.log(`[PUSH] Title: ${message.title}`);
-    console.log(`[PUSH] Body: ${message.body}`);
-    console.log(`[PUSH] Priority: ${message.priority || 'normal'}`);
-    return { sent: true, method: 'push' };
+class FileStorage extends StorageImpl {
+  constructor(baseDir = './storage') {
+    super();
+    this.baseDir = baseDir;
+    this.ensureDirectory();
   }
 
-  sendBulkMessage(recipients, message) {
-    console.log(`[PUSH] Sending to ${recipients.length} devices`);
-    console.log(`[PUSH] Title: ${message.title}`);
-    console.log(`[PUSH] Body: ${message.body}`);
-    return { sent: true, method: 'push', count: recipients.length };
+  ensureDirectory() {
+    if (!fs.existsSync(this.baseDir)) {
+      fs.mkdirSync(this.baseDir, { recursive: true });
+    }
+  }
+
+  getFilePath(key) {
+    const safeKey = crypto.createHash('md5').update(key).digest('hex');
+    return path.join(this.baseDir, `${safeKey}.json`);
+  }
+
+  async save(key, value) {
+    return new Promise((resolve, reject) => {
+      try {
+        const filePath = this.getFilePath(key);
+        const data = {
+          key: key,
+          value: value,
+          timestamp: Date.now()
+        };
+        fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
+        resolve(true);
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }
+
+  async load(key) {
+    return new Promise((resolve, reject) => {
+      try {
+        const filePath = this.getFilePath(key);
+        if (!fs.existsSync(filePath)) {
+          reject(new Error(`Key not found: ${key}`));
+          return;
+        }
+        const data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+        resolve(data.value);
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }
+
+  async delete(key) {
+    return new Promise((resolve, reject) => {
+      try {
+        const filePath = this.getFilePath(key);
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+          resolve(true);
+        } else {
+          resolve(false);
+        }
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }
+
+  async exists(key) {
+    return new Promise((resolve) => {
+      const filePath = this.getFilePath(key);
+      resolve(fs.existsSync(filePath));
+    });
+  }
+
+  async list() {
+    return new Promise((resolve, reject) => {
+      try {
+        const files = fs.readdirSync(this.baseDir);
+        const keys = files
+          .filter(file => file.endsWith('.json'))
+          .map(file => {
+            const content = fs.readFileSync(path.join(this.baseDir, file), 'utf8');
+            return JSON.parse(content).key;
+          });
+        resolve(keys);
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }
+
+  async clear() {
+    return new Promise((resolve, reject) => {
+      try {
+        const files = fs.readdirSync(this.baseDir);
+        files.forEach(file => {
+          fs.unlinkSync(path.join(this.baseDir, file));
+        });
+        resolve(true);
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }
+
+  async getSize() {
+    const files = fs.readdirSync(this.baseDir);
+    return files.filter(f => f.endsWith('.json')).length;
+  }
+}
+
+/**
+ * Compressed Storage - Storage with compression
+ */
+class CompressedStorage extends StorageImpl {
+  constructor(baseStorage) {
+    super();
+    this.storage = baseStorage;
+  }
+
+  compress(data) {
+    // Simple compression simulation (in real app, use zlib)
+    const json = JSON.stringify(data);
+    return Buffer.from(json).toString('base64');
+  }
+
+  decompress(compressed) {
+    // Simple decompression simulation
+    const json = Buffer.from(compressed, 'base64').toString('utf8');
+    return JSON.parse(json);
+  }
+
+  async save(key, value) {
+    const compressed = this.compress(value);
+    return this.storage.save(key, compressed);
+  }
+
+  async load(key) {
+    const compressed = await this.storage.load(key);
+    return this.decompress(compressed);
+  }
+
+  async delete(key) {
+    return this.storage.delete(key);
+  }
+
+  async exists(key) {
+    return this.storage.exists(key);
+  }
+
+  async list() {
+    return this.storage.list();
+  }
+
+  async clear() {
+    return this.storage.clear();
   }
 }
 
 // ============= Abstraction =============
 
 /**
- * Abstraction: Message
- * Defines the abstraction's interface and maintains reference to implementor
+ * Data Repository - High-level abstraction
  */
-class Message {
-  constructor(sender) {
-    this.sender = sender;
+class DataRepository {
+  constructor(storage) {
+    if (!storage) {
+      throw new Error('Storage implementation is required');
+    }
+    this.storage = storage;
   }
 
-  setSender(sender) {
-    this.sender = sender;
+  setStorage(storage) {
+    this.storage = storage;
   }
 
-  send(recipient, content) {
-    throw new Error('Method send() must be implemented');
+  async create(key, value) {
+    throw new Error('Method create() must be implemented');
+  }
+
+  async read(key) {
+    throw new Error('Method read() must be implemented');
+  }
+
+  async update(key, value) {
+    throw new Error('Method update() must be implemented');
+  }
+
+  async delete(key) {
+    throw new Error('Method delete() must be implemented');
   }
 }
 
 // ============= Refined Abstractions =============
 
 /**
- * Refined Abstraction: ShortMessage
- * Extends the abstraction for short-form messages
+ * Simple Repository - Basic CRUD operations
  */
-class ShortMessage extends Message {
-  constructor(sender) {
-    super(sender);
+class SimpleRepository extends DataRepository {
+  constructor(storage) {
+    super(storage);
   }
 
-  send(recipient, content) {
-    console.log('\n--- Sending Short Message ---');
-
-    const message = {
-      text: content,
-      timestamp: new Date().toISOString()
-    };
-
-    return this.sender.sendMessage(recipient, message);
+  async create(key, value) {
+    const exists = await this.storage.exists(key);
+    if (exists) {
+      throw new Error(`Key already exists: ${key}`);
+    }
+    await this.storage.save(key, value);
+    return { success: true, key, message: 'Created successfully' };
   }
 
-  broadcast(recipients, content) {
-    console.log('\n--- Broadcasting Short Message ---');
+  async read(key) {
+    const value = await this.storage.load(key);
+    return { success: true, key, value };
+  }
 
-    const message = {
-      text: content,
-      timestamp: new Date().toISOString()
-    };
+  async update(key, value) {
+    const exists = await this.storage.exists(key);
+    if (!exists) {
+      throw new Error(`Key not found: ${key}`);
+    }
+    await this.storage.save(key, value);
+    return { success: true, key, message: 'Updated successfully' };
+  }
 
-    return this.sender.sendBulkMessage(recipients, message);
+  async delete(key) {
+    const result = await this.storage.delete(key);
+    if (!result) {
+      throw new Error(`Key not found: ${key}`);
+    }
+    return { success: true, key, message: 'Deleted successfully' };
+  }
+
+  async list() {
+    const keys = await this.storage.list();
+    return { success: true, keys, count: keys.length };
+  }
+
+  async clear() {
+    await this.storage.clear();
+    return { success: true, message: 'All data cleared' };
   }
 }
 
 /**
- * Refined Abstraction: DetailedMessage
- * Extends the abstraction for detailed messages
+ * Cached Repository - Repository with caching layer
  */
-class DetailedMessage extends Message {
-  constructor(sender) {
-    super(sender);
+class CachedRepository extends DataRepository {
+  constructor(storage) {
+    super(storage);
+    this.cache = new Map();
+    this.cacheHits = 0;
+    this.cacheMisses = 0;
   }
 
-  send(recipient, content) {
-    console.log('\n--- Sending Detailed Message ---');
-
-    const message = {
-      subject: content.subject,
-      body: content.body,
-      attachments: content.attachments || [],
-      timestamp: new Date().toISOString(),
-      priority: content.priority || 'normal'
-    };
-
-    return this.sender.sendMessage(recipient, message);
+  async create(key, value) {
+    const exists = await this.storage.exists(key);
+    if (exists) {
+      throw new Error(`Key already exists: ${key}`);
+    }
+    await this.storage.save(key, value);
+    this.cache.set(key, value);
+    return { success: true, key, message: 'Created and cached' };
   }
 
-  broadcast(recipients, content) {
-    console.log('\n--- Broadcasting Detailed Message ---');
+  async read(key) {
+    if (this.cache.has(key)) {
+      this.cacheHits++;
+      return {
+        success: true,
+        key,
+        value: this.cache.get(key),
+        cached: true,
+        cacheHits: this.cacheHits
+      };
+    }
 
-    const message = {
-      subject: content.subject,
-      body: content.body,
-      attachments: content.attachments || [],
-      timestamp: new Date().toISOString()
+    this.cacheMisses++;
+    const value = await this.storage.load(key);
+    this.cache.set(key, value);
+    return {
+      success: true,
+      key,
+      value,
+      cached: false,
+      cacheMisses: this.cacheMisses
     };
+  }
 
-    return this.sender.sendBulkMessage(recipients, message);
+  async update(key, value) {
+    await this.storage.save(key, value);
+    this.cache.set(key, value);
+    return { success: true, key, message: 'Updated and cache refreshed' };
+  }
+
+  async delete(key) {
+    await this.storage.delete(key);
+    this.cache.delete(key);
+    return { success: true, key, message: 'Deleted and cache cleared' };
+  }
+
+  async list() {
+    const keys = await this.storage.list();
+    return { success: true, keys, count: keys.length };
+  }
+
+  getCacheStats() {
+    return {
+      size: this.cache.size,
+      hits: this.cacheHits,
+      misses: this.cacheMisses,
+      hitRate: this.cacheHits + this.cacheMisses > 0
+        ? ((this.cacheHits / (this.cacheHits + this.cacheMisses)) * 100).toFixed(2) + '%'
+        : '0%'
+    };
+  }
+
+  clearCache() {
+    this.cache.clear();
+    this.cacheHits = 0;
+    this.cacheMisses = 0;
   }
 }
 
 /**
- * Refined Abstraction: UrgentMessage
- * Extends the abstraction for urgent notifications
+ * Validated Repository - Repository with validation
  */
-class UrgentMessage extends Message {
-  constructor(sender) {
-    super(sender);
+class ValidatedRepository extends DataRepository {
+  constructor(storage, schema) {
+    super(storage);
+    this.schema = schema || {};
   }
 
-  send(recipient, content) {
-    console.log('\n--- Sending URGENT Message ---');
+  validate(value) {
+    if (this.schema.type && typeof value !== this.schema.type) {
+      throw new Error(`Invalid type: expected ${this.schema.type}, got ${typeof value}`);
+    }
 
-    const message = {
-      title: `🚨 URGENT: ${content.title}`,
-      body: content.body,
-      text: content.text || `${content.title} - ${content.body}`,
-      priority: 'high',
-      timestamp: new Date().toISOString()
-    };
+    if (this.schema.required) {
+      for (const field of this.schema.required) {
+        if (value[field] === undefined) {
+          throw new Error(`Required field missing: ${field}`);
+        }
+      }
+    }
 
-    return this.sender.sendMessage(recipient, message);
+    if (this.schema.validator && typeof this.schema.validator === 'function') {
+      const validationResult = this.schema.validator(value);
+      if (validationResult !== true) {
+        throw new Error(`Validation failed: ${validationResult}`);
+      }
+    }
+
+    return true;
   }
 
-  broadcast(recipients, content) {
-    console.log('\n--- Broadcasting URGENT Message ---');
+  async create(key, value) {
+    this.validate(value);
+    await this.storage.save(key, value);
+    return { success: true, key, message: 'Created after validation' };
+  }
 
-    const message = {
-      title: `🚨 URGENT: ${content.title}`,
-      body: content.body,
-      text: content.text || `${content.title} - ${content.body}`,
-      priority: 'high',
-      timestamp: new Date().toISOString()
-    };
+  async read(key) {
+    const value = await this.storage.load(key);
+    return { success: true, key, value };
+  }
 
-    return this.sender.sendBulkMessage(recipients, message);
+  async update(key, value) {
+    this.validate(value);
+    await this.storage.save(key, value);
+    return { success: true, key, message: 'Updated after validation' };
+  }
+
+  async delete(key) {
+    await this.storage.delete(key);
+    return { success: true, key, message: 'Deleted successfully' };
+  }
+
+  async list() {
+    const keys = await this.storage.list();
+    return { success: true, keys, count: keys.length };
   }
 }
 
 module.exports = {
   // Implementations
-  EmailSender,
-  SMSSender,
-  SlackSender,
-  PushNotificationSender,
+  MemoryStorage,
+  FileStorage,
+  CompressedStorage,
   // Abstractions
-  ShortMessage,
-  DetailedMessage,
-  UrgentMessage
+  SimpleRepository,
+  CachedRepository,
+  ValidatedRepository,
+  // Base classes
+  StorageImpl,
+  DataRepository
 };

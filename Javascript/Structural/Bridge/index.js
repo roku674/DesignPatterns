@@ -1,186 +1,159 @@
 /**
- * Bridge Pattern - Demo
- * Demonstrates separating abstraction from implementation
+ * Bridge Pattern - Real Production Usage Example
  */
 
 const {
-  EmailSender,
-  SMSSender,
-  SlackSender,
-  PushNotificationSender,
-  ShortMessage,
-  DetailedMessage,
-  UrgentMessage
+  MemoryStorage,
+  FileStorage,
+  CompressedStorage,
+  SimpleRepository,
+  CachedRepository,
+  ValidatedRepository
 } = require('./messaging-bridge');
 
-console.log('=== Bridge Pattern Demo ===\n');
+async function demonstrateRealBridge() {
+  console.log('=== REAL Bridge Pattern - Data Storage ===\n');
 
-// Example 1: Short message via different channels
-console.log('=== Example 1: Short Messages via Different Channels ===');
+  // Example 1: Simple repository with different storage backends
+  console.log('1. Simple Repository with Different Storage Backends:\n');
 
-const smsShortMessage = new ShortMessage(new SMSSender());
-smsShortMessage.send('+1-555-0123', 'Meeting starts in 15 minutes!');
+  const memoryRepo = new SimpleRepository(new MemoryStorage());
+  const fileRepo = new SimpleRepository(new FileStorage('./temp-storage'));
 
-const slackShortMessage = new ShortMessage(new SlackSender());
-slackShortMessage.send('general', 'Deployment completed successfully');
+  // Save data to memory
+  console.log('--- Memory Storage ---');
+  await memoryRepo.create('user:1', { name: 'Alice', age: 30 });
+  const memResult = await memoryRepo.read('user:1');
+  console.log('Read from memory:', memResult.value);
 
-// Example 2: Detailed message via different channels
-console.log('\n=== Example 2: Detailed Messages via Different Channels ===');
+  // Save data to file
+  console.log('\n--- File Storage ---');
+  await fileRepo.create('user:2', { name: 'Bob', age: 25 });
+  const fileResult = await fileRepo.read('user:2');
+  console.log('Read from file:', fileResult.value);
 
-const emailDetailed = new DetailedMessage(new EmailSender());
-emailDetailed.send('john.doe@example.com', {
-  subject: 'Monthly Report',
-  body: 'Please find attached the monthly performance report.',
-  attachments: ['report.pdf', 'charts.xlsx']
-});
+  // Example 2: Cached repository for performance
+  console.log('\n\n2. Cached Repository with Performance Tracking:\n');
 
-const pushDetailed = new DetailedMessage(new PushNotificationSender());
-pushDetailed.send('device-token-12345', {
-  subject: 'New Message',
-  body: 'You have received a new message from Sarah',
-  priority: 'normal'
-});
+  const cachedRepo = new CachedRepository(new MemoryStorage());
 
-// Example 3: Urgent messages via different channels
-console.log('\n=== Example 3: Urgent Messages via Different Channels ===');
+  await cachedRepo.create('product:1', { name: 'Laptop', price: 999 });
 
-const smsUrgent = new UrgentMessage(new SMSSender());
-smsUrgent.send('+1-555-0456', {
-  title: 'Server Down',
-  body: 'Production server is not responding. Immediate action required!'
-});
+  // First read - cache miss
+  await cachedRepo.read('product:1');
+  console.log('Cache stats after first read:', cachedRepo.getCacheStats());
 
-const emailUrgent = new UrgentMessage(new EmailSender());
-emailUrgent.send('ops-team@example.com', {
-  title: 'Security Alert',
-  body: 'Suspicious login attempts detected from unknown location.'
-});
+  // Second read - cache hit
+  await cachedRepo.read('product:1');
+  console.log('Cache stats after second read:', cachedRepo.getCacheStats());
 
-const pushUrgent = new UrgentMessage(new PushNotificationSender());
-pushUrgent.send('admin-device-789', {
-  title: 'Payment Failed',
-  body: 'Critical payment processing error. Check logs immediately.'
-});
+  // Third read - cache hit
+  await cachedRepo.read('product:1');
+  console.log('Cache stats after third read:', cachedRepo.getCacheStats());
 
-// Example 4: Broadcasting messages
-console.log('\n=== Example 4: Broadcasting Messages ===');
+  // Example 3: Validated repository
+  console.log('\n\n3. Validated Repository with Schema:\n');
 
-const slackBroadcast = new ShortMessage(new SlackSender());
-slackBroadcast.broadcast(
-  ['general', 'engineering', 'devops'],
-  'System maintenance scheduled for tonight at 11 PM'
-);
-
-const emailBroadcast = new DetailedMessage(new EmailSender());
-emailBroadcast.broadcast(
-  ['team@example.com', 'managers@example.com', 'stakeholders@example.com'],
-  {
-    subject: 'Q4 Results Announcement',
-    body: 'We are pleased to announce record-breaking Q4 results...',
-    attachments: ['q4-report.pdf']
-  }
-);
-
-// Example 5: Switching implementations at runtime
-console.log('\n=== Example 5: Switching Implementations at Runtime ===');
-
-const message = new ShortMessage(new SMSSender());
-message.send('+1-555-0789', 'Testing SMS sender');
-
-console.log('\n--- Switching to Slack ---');
-message.setSender(new SlackSender());
-message.send('testing', 'Testing Slack sender');
-
-console.log('\n--- Switching to Push Notification ---');
-message.setSender(new PushNotificationSender());
-message.send('test-device', {
-  title: 'Test',
-  body: 'Testing push notification sender'
-});
-
-// Example 6: Demonstrating independence of abstraction and implementation
-console.log('\n=== Example 6: Independence of Dimensions ===\n');
-
-console.log('Abstraction Dimension (Message Types):');
-console.log('  - ShortMessage');
-console.log('  - DetailedMessage');
-console.log('  - UrgentMessage');
-console.log('  + Easy to add: ScheduledMessage, EncryptedMessage, etc.\n');
-
-console.log('Implementation Dimension (Channels):');
-console.log('  - EmailSender');
-console.log('  - SMSSender');
-console.log('  - SlackSender');
-console.log('  - PushNotificationSender');
-console.log('  + Easy to add: TwitterSender, WhatsAppSender, etc.\n');
-
-console.log('Total Combinations: 3 abstractions × 4 implementations = 12 combinations');
-console.log('Without Bridge: Would need 12 separate classes!');
-console.log('With Bridge: Only need 3 + 4 = 7 classes!\n');
-
-// Example 7: Practical notification system
-console.log('=== Example 7: Practical Notification System ===');
-
-class NotificationService {
-  constructor() {
-    this.channelPreferences = new Map();
-  }
-
-  setUserPreference(userId, messageType, channel) {
-    if (!this.channelPreferences.has(userId)) {
-      this.channelPreferences.set(userId, new Map());
+  const userSchema = {
+    type: 'object',
+    required: ['name', 'email', 'age'],
+    validator: (value) => {
+      if (value.age < 18) return 'Age must be 18 or older';
+      if (!value.email.includes('@')) return 'Invalid email format';
+      return true;
     }
-    this.channelPreferences.get(userId).set(messageType, channel);
+  };
+
+  const validatedRepo = new ValidatedRepository(new MemoryStorage(), userSchema);
+
+  // Valid user
+  try {
+    await validatedRepo.create('user:3', {
+      name: 'Charlie',
+      email: 'charlie@example.com',
+      age: 22
+    });
+    console.log('Valid user created successfully');
+  } catch (error) {
+    console.log('Error:', error.message);
   }
 
-  notify(userId, messageType, content) {
-    const userPrefs = this.channelPreferences.get(userId);
-    const channel = userPrefs?.get(messageType) || 'email';
-
-    const sender = this.getSender(channel);
-    const message = this.getMessage(messageType, sender);
-
-    return message.send(userId, content);
+  // Invalid user (missing email)
+  try {
+    await validatedRepo.create('user:4', {
+      name: 'David',
+      age: 20
+    });
+  } catch (error) {
+    console.log('Validation error (missing email):', error.message);
   }
 
-  getSender(channel) {
-    switch (channel) {
-      case 'email': return new EmailSender();
-      case 'sms': return new SMSSender();
-      case 'slack': return new SlackSender();
-      case 'push': return new PushNotificationSender();
-      default: return new EmailSender();
-    }
+  // Invalid user (age too young)
+  try {
+    await validatedRepo.create('user:5', {
+      name: 'Eve',
+      email: 'eve@example.com',
+      age: 16
+    });
+  } catch (error) {
+    console.log('Validation error (age < 18):', error.message);
   }
 
-  getMessage(type, sender) {
-    switch (type) {
-      case 'short': return new ShortMessage(sender);
-      case 'detailed': return new DetailedMessage(sender);
-      case 'urgent': return new UrgentMessage(sender);
-      default: return new ShortMessage(sender);
-    }
-  }
+  // Example 4: Switching storage implementations at runtime
+  console.log('\n\n4. Switching Storage Implementations at Runtime:\n');
+
+  const flexibleRepo = new SimpleRepository(new MemoryStorage());
+
+  await flexibleRepo.create('config:1', { theme: 'dark' });
+  console.log('Saved to memory storage');
+
+  // Switch to file storage
+  flexibleRepo.setStorage(new FileStorage('./temp-storage'));
+  await flexibleRepo.create('config:2', { theme: 'light' });
+  console.log('Saved to file storage');
+
+  // List all keys in file storage
+  const list = await flexibleRepo.list();
+  console.log('Keys in file storage:', list.keys);
+
+  // Example 5: Compressed storage
+  console.log('\n\n5. Compressed Storage Layer:\n');
+
+  const baseStorage = new MemoryStorage();
+  const compressedStorage = new CompressedStorage(baseStorage);
+  const compressedRepo = new SimpleRepository(compressedStorage);
+
+  const largeObject = {
+    id: 1,
+    data: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. '.repeat(10),
+    items: Array.from({ length: 100 }, (_, i) => ({ id: i, value: `Item ${i}` }))
+  };
+
+  await compressedRepo.create('large:1', largeObject);
+  console.log('Large object saved with compression');
+
+  const retrieved = await compressedRepo.read('large:1');
+  console.log('Retrieved compressed object, item count:', retrieved.value.items.length);
+
+  // Cleanup
+  console.log('\n\n6. Cleanup:\n');
+  await memoryRepo.clear();
+  await fileRepo.clear();
+  console.log('All repositories cleared');
+
+  console.log('\n=== Demo Complete ===');
+  console.log('\nKey Benefits Demonstrated:');
+  console.log('- Abstraction (Repository) separated from Implementation (Storage)');
+  console.log('- Can combine any abstraction with any implementation');
+  console.log('- Easy to add new storage backends without changing repositories');
+  console.log('- Easy to add new repository types without changing storage');
+  console.log('- Caching, validation, and compression work with any storage');
+  console.log('- Real file system operations and memory management');
 }
 
-const notificationService = new NotificationService();
+// Run the demonstration
+if (require.main === module) {
+  demonstrateRealBridge().catch(console.error);
+}
 
-// Set user preferences
-notificationService.setUserPreference('user1', 'urgent', 'sms');
-notificationService.setUserPreference('user1', 'detailed', 'email');
-notificationService.setUserPreference('user2', 'urgent', 'push');
-
-// Send notifications based on preferences
-console.log('\n--- User 1 receives urgent message via SMS (preference) ---');
-notificationService.notify('user1', 'urgent', {
-  title: 'Order Shipped',
-  body: 'Your order has been shipped and will arrive tomorrow'
-});
-
-console.log('\n--- User 2 receives urgent message via Push (preference) ---');
-notificationService.notify('user2', 'urgent', {
-  title: 'Order Shipped',
-  body: 'Your order has been shipped and will arrive tomorrow'
-});
-
-console.log('\n=== Demo Complete ===');
+module.exports = { demonstrateRealBridge };

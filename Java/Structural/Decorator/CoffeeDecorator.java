@@ -1,3 +1,5 @@
+import java.io.IOException;
+
 /**
  * Base Decorator - maintains reference to component and defines interface
  */
@@ -9,12 +11,22 @@ public abstract class CoffeeDecorator implements Coffee {
     }
 
     @Override
-    public String getDescription() {
-        return decoratedCoffee.getDescription();
+    public void write(byte[] data) throws IOException {
+        decoratedCoffee.write(data);
     }
 
     @Override
-    public double getCost() {
-        return decoratedCoffee.getCost();
+    public byte[] read() throws IOException {
+        return decoratedCoffee.read();
+    }
+
+    @Override
+    public void close() throws IOException {
+        decoratedCoffee.close();
+    }
+
+    @Override
+    public String getDescription() {
+        return decoratedCoffee.getDescription();
     }
 }

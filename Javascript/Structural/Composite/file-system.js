@@ -1,55 +1,57 @@
 /**
- * Composite Pattern - File System Example
+ * Composite Pattern - REAL Production Implementation
  *
- * The Composite pattern lets you compose objects into tree structures
- * to represent part-whole hierarchies. It lets clients treat individual
- * objects and compositions uniformly.
+ * Real file system operations with actual directory manipulation,
+ * searching, filtering, and tree operations.
  */
 
-/**
- * Component: FileSystemNode
- * Base interface for both files and directories
- */
+const fs = require('fs');
+const path = require('path');
+
+// ============= Component =============
+
 class FileSystemNode {
   constructor(name) {
     this.name = name;
+    this.parent = null;
   }
 
   getName() {
     return this.name;
   }
 
+  getPath() {
+    if (!this.parent) return this.name;
+    return path.join(this.parent.getPath(), this.name);
+  }
+
+  setParent(parent) {
+    this.parent = parent;
+  }
+
   getSize() {
     throw new Error('Method getSize() must be implemented');
   }
 
-  print(indent = '') {
-    throw new Error('Method print() must be implemented');
+  search(predicate) {
+    throw new Error('Method search() must be implemented');
   }
 
-  // Methods for composite operations
-  add(node) {
-    throw new Error('Cannot add to a leaf node');
-  }
-
-  remove(node) {
-    throw new Error('Cannot remove from a leaf node');
-  }
-
-  getChild(index) {
-    throw new Error('Leaf nodes have no children');
+  toJSON() {
+    throw new Error('Method toJSON() must be implemented');
   }
 }
 
-/**
- * Leaf: File
- * Represents individual files (leaf nodes)
- */
+// ============= Leaf =============
+
 class File extends FileSystemNode {
-  constructor(name, size) {
+  constructor(name, size = 0, content = '') {
     super(name);
     this.size = size;
-    this.extension = name.split('.').pop();
+    this.content = content;
+    this.extension = path.extname(name).slice(1);
+    this.createdAt = new Date();
+    this.modifiedAt = new Date();
   }
 
   getSize() {
@@ -60,29 +62,68 @@ class File extends FileSystemNode {
     return this.extension;
   }
 
-  print(indent = '') {
-    console.log(`${indent}📄 ${this.name} (${this.formatSize(this.size)})`);
+  getContent() {
+    return this.content;
   }
 
-  formatSize(bytes) {
-    if (bytes < 1024) return `${bytes} B`;
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  setContent(content) {
+    this.content = content;
+    this.size = Buffer.byteLength(content, 'utf8');
+    this.modifiedAt = new Date();
+  }
+
+  read() {
+    return {
+      name: this.name,
+      content: this.content,
+      size: this.size,
+      type: 'file'
+    };
+  }
+
+  write(content) {
+    this.setContent(content);
+    return { success: true, size: this.size };
+  }
+
+  search(predicate) {
+    return predicate(this) ? [this] : [];
+  }
+
+  toJSON() {
+    return {
+      type: 'file',
+      name: this.name,
+      size: this.size,
+      extension: this.extension,
+      createdAt: this.createdAt,
+      modifiedAt: this.modifiedAt
+    };
+  }
+
+  clone() {
+    return new File(this.name, this.size, this.content);
   }
 }
 
-/**
- * Composite: Directory
- * Represents directories (composite nodes) that can contain files and other directories
- */
+// ============= Composite =============
+
 class Directory extends FileSystemNode {
   constructor(name) {
     super(name);
     this.children = [];
+    this.createdAt = new Date();
   }
 
   add(node) {
+    if (!node) {
+      throw new Error('Cannot add null node');
+    }
+    if (this.children.find(child => child.getName() === node.getName())) {
+      throw new Error(`Node with name '${node.getName()}' already exists`);
+    }
     this.children.push(node);
+    node.setParent(this);
     return this;
   }
 
@@ -90,12 +131,14 @@ class Directory extends FileSystemNode {
     const index = this.children.indexOf(node);
     if (index > -1) {
       this.children.splice(index, 1);
+      node.setParent(null);
+      return true;
     }
-    return this;
+    return false;
   }
 
-  getChild(index) {
-    return this.children[index];
+  getChild(name) {
+    return this.children.find(child => child.getName() === name);
   }
 
   getChildren() {
@@ -103,7 +146,6 @@ class Directory extends FileSystemNode {
   }
 
   getSize() {
-    // Recursively calculate total size of all children
     return this.children.reduce((total, child) => total + child.getSize(), 0);
   }
 
@@ -127,9 +169,73 @@ class Directory extends FileSystemNode {
     }, 0);
   }
 
-  print(indent = '') {
-    console.log(`${indent}📁 ${this.name}/ (${this.formatSize(this.getSize())})`);
-    this.children.forEach(child => child.print(indent + '  '));
+  search(predicate) {
+    let results = [];
+
+    if (predicate(this)) {
+      results.push(this);
+    }
+
+    for (const child of this.children) {
+      results = results.concat(child.search(predicate));
+    }
+
+    return results;
+  }
+
+  findByName(name) {
+    return this.search(node => node.getName() === name);
+  }
+
+  findByExtension(ext) {
+    return this.search(node =>
+      node instanceof File && node.getExtension() === ext
+    );
+  }
+
+  findLargeFiles(minSize) {
+    return this.search(node =>
+      node instanceof File && node.getSize() > minSize
+    );
+  }
+
+  findByPattern(pattern) {
+    const regex = new RegExp(pattern);
+    return this.search(node => regex.test(node.getName()));
+  }
+
+  isEmpty() {
+    return this.children.length === 0;
+  }
+
+  clear() {
+    this.children = [];
+    return this;
+  }
+
+  toJSON() {
+    return {
+      type: 'directory',
+      name: this.name,
+      size: this.getSize(),
+      fileCount: this.getFileCount(),
+      directoryCount: this.getDirectoryCount(),
+      createdAt: this.createdAt,
+      children: this.children.map(child => child.toJSON())
+    };
+  }
+
+  toTree(indent = '') {
+    let tree = `${indent}${this.name}/\n`;
+    const childIndent = indent + '  ';
+    for (const child of this.children) {
+      if (child instanceof Directory) {
+        tree += child.toTree(childIndent);
+      } else {
+        tree += `${childIndent}${child.getName()} (${this.formatSize(child.getSize())})\n`;
+      }
+    }
+    return tree;
   }
 
   formatSize(bytes) {
@@ -138,43 +244,142 @@ class Directory extends FileSystemNode {
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   }
 
-  /**
-   * Find all files with specific extension
-   */
-  findByExtension(ext) {
-    const results = [];
+  // Real file system operations
+  async saveToDisk(basePath) {
+    const dirPath = path.join(basePath, this.name);
 
-    this.children.forEach(child => {
-      if (child instanceof File && child.getExtension() === ext) {
-        results.push(child);
+    if (!fs.existsSync(dirPath)) {
+      fs.mkdirSync(dirPath, { recursive: true });
+    }
+
+    for (const child of this.children) {
+      if (child instanceof File) {
+        const filePath = path.join(dirPath, child.getName());
+        fs.writeFileSync(filePath, child.getContent());
       } else if (child instanceof Directory) {
-        results.push(...child.findByExtension(ext));
+        await child.saveToDisk(dirPath);
       }
-    });
+    }
 
-    return results;
+    return { success: true, path: dirPath };
   }
 
-  /**
-   * Find files larger than specified size
-   */
-  findLargeFiles(minSize) {
-    const results = [];
+  static loadFromDisk(dirPath) {
+    if (!fs.existsSync(dirPath)) {
+      throw new Error(`Directory not found: ${dirPath}`);
+    }
 
-    this.children.forEach(child => {
-      if (child instanceof File && child.getSize() > minSize) {
-        results.push(child);
-      } else if (child instanceof Directory) {
-        results.push(...child.findLargeFiles(minSize));
+    const dirName = path.basename(dirPath);
+    const directory = new Directory(dirName);
+
+    const items = fs.readdirSync(dirPath);
+
+    for (const item of items) {
+      const itemPath = path.join(dirPath, item);
+      const stats = fs.statSync(itemPath);
+
+      if (stats.isDirectory()) {
+        const subDir = Directory.loadFromDisk(itemPath);
+        directory.add(subDir);
+      } else if (stats.isFile()) {
+        const content = fs.readFileSync(itemPath, 'utf8');
+        const file = new File(item, stats.size, content);
+        directory.add(file);
       }
-    });
+    }
 
-    return results;
+    return directory;
+  }
+
+  clone() {
+    const cloned = new Directory(this.name);
+    for (const child of this.children) {
+      cloned.add(child.clone());
+    }
+    return cloned;
+  }
+}
+
+// ============= Operations =============
+
+class FileSystemOperations {
+  static calculateTotalSize(node) {
+    return node.getSize();
+  }
+
+  static countFiles(node) {
+    if (node instanceof File) return 1;
+    if (node instanceof Directory) return node.getFileCount();
+    return 0;
+  }
+
+  static countDirectories(node) {
+    if (node instanceof Directory) return 1 + node.getDirectoryCount();
+    return 0;
+  }
+
+  static findDuplicates(node) {
+    const fileMap = new Map();
+    const duplicates = [];
+
+    const files = node.search(n => n instanceof File);
+
+    for (const file of files) {
+      const key = `${file.getSize()}-${file.getContent().substring(0, 100)}`;
+      if (fileMap.has(key)) {
+        duplicates.push({
+          original: fileMap.get(key),
+          duplicate: file
+        });
+      } else {
+        fileMap.set(key, file);
+      }
+    }
+
+    return duplicates;
+  }
+
+  static getStatistics(node) {
+    return {
+      totalSize: node.getSize(),
+      fileCount: FileSystemOperations.countFiles(node),
+      directoryCount: FileSystemOperations.countDirectories(node),
+      largestFile: FileSystemOperations.findLargestFile(node),
+      mostCommonExtension: FileSystemOperations.getMostCommonExtension(node)
+    };
+  }
+
+  static findLargestFile(node) {
+    const files = node.search(n => n instanceof File);
+    if (files.length === 0) return null;
+    return files.reduce((largest, file) =>
+      file.getSize() > largest.getSize() ? file : largest
+    );
+  }
+
+  static getMostCommonExtension(node) {
+    const files = node.search(n => n instanceof File);
+    const extCounts = new Map();
+
+    for (const file of files) {
+      const ext = file.getExtension();
+      extCounts.set(ext, (extCounts.get(ext) || 0) + 1);
+    }
+
+    let mostCommon = { ext: null, count: 0 };
+    for (const [ext, count] of extCounts) {
+      if (count > mostCommon.count) {
+        mostCommon = { ext, count };
+      }
+    }
+
+    return mostCommon;
   }
 }
 
 module.exports = {
   FileSystemNode,
   File,
-  Directory
+  Directory,
+  FileSystemOperations
 };

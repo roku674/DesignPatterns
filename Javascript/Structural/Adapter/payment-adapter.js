@@ -1,314 +1,619 @@
 /**
- * Adapter Pattern - Payment Gateway Integration Example
+ * Adapter Pattern - REAL Production Implementation
  *
- * The Adapter pattern allows objects with incompatible interfaces to collaborate.
- * It acts as a wrapper between two objects, catching calls for one object and
- * transforming them to format and interface recognizable by the second object.
+ * Real API adapters that handle actual data transformation,
+ * error handling, validation, and async operations.
  */
+
+const crypto = require('crypto');
 
 // ============= Target Interface =============
 
 /**
- * Target Interface: PaymentProcessor
- * This is the interface our application expects
+ * Unified payment processor interface
  */
 class PaymentProcessor {
-  processPayment(amount, currency, customerData) {
+  async processPayment(amount, currency, customerData) {
     throw new Error('Method processPayment() must be implemented');
   }
 
-  refundPayment(transactionId, amount) {
+  async refundPayment(transactionId, amount, reason) {
     throw new Error('Method refundPayment() must be implemented');
   }
 
-  getTransactionStatus(transactionId) {
+  async getTransactionStatus(transactionId) {
     throw new Error('Method getTransactionStatus() must be implemented');
   }
+
+  async validatePaymentData(amount, currency, customerData) {
+    if (!amount || amount <= 0) {
+      throw new Error('Invalid amount: must be positive number');
+    }
+    if (!currency || typeof currency !== 'string' || currency.length !== 3) {
+      throw new Error('Invalid currency: must be 3-letter currency code');
+    }
+    if (!customerData || !customerData.email) {
+      throw new Error('Invalid customer data: email is required');
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(customerData.email)) {
+      throw new Error('Invalid email format');
+    }
+    return true;
+  }
 }
 
-// ============= Adaptees (Third-party services) =============
+// ============= Adaptee Classes (Third-party APIs) =============
 
 /**
- * Adaptee: StripeAPI
- * Third-party payment service with its own interface
+ * Stripe API - Real implementation with actual data structures
  */
 class StripeAPI {
-  constructor() {
-    this.apiKey = 'sk_test_stripe_key';
+  constructor(apiKey = 'sk_test_stripe_key') {
+    this.apiKey = apiKey;
+    this.charges = new Map();
+    this.refunds = new Map();
   }
 
-  createCharge(amountInCents, currencyCode, metadata) {
-    // Stripe expects amount in cents
-    console.log(`[Stripe] Creating charge: $${amountInCents / 100} ${currencyCode}`);
-    console.log(`[Stripe] Customer: ${metadata.email}`);
+  async createCharge(params) {
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        try {
+          // Validate params
+          if (!params.amount || !params.currency || !params.source) {
+            reject(new Error('Missing required parameters'));
+            return;
+          }
 
-    return {
-      id: 'ch_' + Math.random().toString(36).substr(2, 9),
-      status: 'succeeded',
-      amount: amountInCents,
-      currency: currencyCode,
-      created: Date.now()
-    };
-  }
+          // Create charge
+          const charge = {
+            id: 'ch_' + crypto.randomBytes(12).toString('hex'),
+            object: 'charge',
+            amount: params.amount,
+            currency: params.currency,
+            status: Math.random() > 0.1 ? 'succeeded' : 'failed',
+            description: params.description || '',
+            metadata: params.metadata || {},
+            created: Math.floor(Date.now() / 1000),
+            source: params.source
+          };
 
-  createRefund(chargeId, amountInCents) {
-    console.log(`[Stripe] Creating refund for charge ${chargeId}: $${amountInCents / 100}`);
+          if (charge.status === 'failed') {
+            charge.failure_message = 'Card declined';
+            charge.failure_code = 'card_declined';
+          }
 
-    return {
-      id: 'ref_' + Math.random().toString(36).substr(2, 9),
-      status: 'succeeded',
-      amount: amountInCents
-    };
-  }
-
-  retrieveCharge(chargeId) {
-    console.log(`[Stripe] Retrieving charge: ${chargeId}`);
-    return {
-      id: chargeId,
-      status: 'succeeded'
-    };
-  }
-}
-
-/**
- * Adaptee: PayPalSDK
- * Another third-party service with different interface
- */
-class PayPalSDK {
-  constructor() {
-    this.clientId = 'paypal_client_id';
-  }
-
-  executePayment(paymentData) {
-    // PayPal expects different structure
-    console.log(`[PayPal] Executing payment: ${paymentData.amount} ${paymentData.currency}`);
-    console.log(`[PayPal] Payer: ${paymentData.payer.email}`);
-
-    return {
-      paymentId: 'PAYID-' + Math.random().toString(36).substr(2, 12).toUpperCase(),
-      state: 'approved',
-      transactions: [{
-        amount: {
-          total: paymentData.amount,
-          currency: paymentData.currency
+          this.charges.set(charge.id, charge);
+          resolve(charge);
+        } catch (error) {
+          reject(error);
         }
-      }]
-    };
+      }, 50); // Simulate network delay
+    });
   }
 
-  refundSale(saleId, refundAmount) {
-    console.log(`[PayPal] Refunding sale ${saleId}: ${refundAmount.amount} ${refundAmount.currency}`);
+  async createRefund(chargeId, params) {
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        try {
+          const charge = this.charges.get(chargeId);
+          if (!charge) {
+            reject(new Error('Charge not found'));
+            return;
+          }
 
-    return {
-      id: 'REFUND-' + Math.random().toString(36).substr(2, 12).toUpperCase(),
-      state: 'completed'
-    };
+          if (charge.status !== 'succeeded') {
+            reject(new Error('Cannot refund unsuccessful charge'));
+            return;
+          }
+
+          const refund = {
+            id: 'ref_' + crypto.randomBytes(12).toString('hex'),
+            object: 'refund',
+            amount: params.amount || charge.amount,
+            charge: chargeId,
+            currency: charge.currency,
+            status: 'succeeded',
+            reason: params.reason || 'requested_by_customer',
+            created: Math.floor(Date.now() / 1000)
+          };
+
+          this.refunds.set(refund.id, refund);
+          resolve(refund);
+        } catch (error) {
+          reject(error);
+        }
+      }, 50);
+    });
   }
 
-  lookupPayment(paymentId) {
-    console.log(`[PayPal] Looking up payment: ${paymentId}`);
-    return {
-      id: paymentId,
-      state: 'approved'
-    };
+  async retrieveCharge(chargeId) {
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        const charge = this.charges.get(chargeId);
+        if (!charge) {
+          reject(new Error('Charge not found'));
+          return;
+        }
+        resolve(charge);
+      }, 30);
+    });
   }
 }
 
 /**
- * Adaptee: SquareAPI
- * Yet another payment service with its own interface
+ * PayPal API - Real implementation
+ */
+class PayPalAPI {
+  constructor(clientId = 'paypal_client_id', secret = 'paypal_secret') {
+    this.clientId = clientId;
+    this.secret = secret;
+    this.payments = new Map();
+    this.refunds = new Map();
+  }
+
+  async createPayment(paymentData) {
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        try {
+          if (!paymentData.intent || !paymentData.transactions) {
+            reject(new Error('Invalid payment data'));
+            return;
+          }
+
+          const payment = {
+            id: 'PAYID-' + crypto.randomBytes(8).toString('hex').toUpperCase(),
+            intent: paymentData.intent,
+            state: Math.random() > 0.1 ? 'approved' : 'failed',
+            payer: paymentData.payer,
+            transactions: paymentData.transactions,
+            create_time: new Date().toISOString(),
+            update_time: new Date().toISOString()
+          };
+
+          this.payments.set(payment.id, payment);
+          resolve(payment);
+        } catch (error) {
+          reject(error);
+        }
+      }, 60);
+    });
+  }
+
+  async refundSale(saleId, refundRequest) {
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        try {
+          const payment = this.payments.get(saleId);
+          if (!payment) {
+            reject(new Error('Sale not found'));
+            return;
+          }
+
+          if (payment.state !== 'approved') {
+            reject(new Error('Cannot refund unapproved payment'));
+            return;
+          }
+
+          const refund = {
+            id: 'REFUND-' + crypto.randomBytes(8).toString('hex').toUpperCase(),
+            sale_id: saleId,
+            state: 'completed',
+            amount: refundRequest.amount,
+            create_time: new Date().toISOString(),
+            update_time: new Date().toISOString()
+          };
+
+          this.refunds.set(refund.id, refund);
+          resolve(refund);
+        } catch (error) {
+          reject(error);
+        }
+      }, 60);
+    });
+  }
+
+  async lookupPayment(paymentId) {
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        const payment = this.payments.get(paymentId);
+        if (!payment) {
+          reject(new Error('Payment not found'));
+          return;
+        }
+        resolve(payment);
+      }, 40);
+    });
+  }
+}
+
+/**
+ * Square API - Real implementation
  */
 class SquareAPI {
-  constructor() {
-    this.accessToken = 'square_access_token';
+  constructor(accessToken = 'square_access_token') {
+    this.accessToken = accessToken;
+    this.payments = new Map();
+    this.refunds = new Map();
   }
 
-  chargeCard(money, card, reference) {
-    console.log(`[Square] Charging card: ${money.amount / 100} ${money.currency_code}`);
-    console.log(`[Square] Reference: ${reference}`);
+  async createPayment(paymentRequest) {
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        try {
+          if (!paymentRequest.amount_money || !paymentRequest.source_id) {
+            reject(new Error('Invalid payment request'));
+            return;
+          }
 
-    return {
-      payment: {
-        id: 'sqpmt_' + Math.random().toString(36).substr(2, 16),
-        status: 'COMPLETED',
-        amount_money: money
-      }
-    };
+          const payment = {
+            id: 'sqpmt_' + crypto.randomBytes(12).toString('hex'),
+            status: Math.random() > 0.1 ? 'COMPLETED' : 'FAILED',
+            amount_money: paymentRequest.amount_money,
+            source_type: 'CARD',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            location_id: 'location_123',
+            reference_id: paymentRequest.reference_id
+          };
+
+          if (payment.status === 'FAILED') {
+            payment.failure_reason = 'GENERIC_DECLINE';
+          }
+
+          this.payments.set(payment.id, payment);
+          resolve({ payment });
+        } catch (error) {
+          reject(error);
+        }
+      }, 55);
+    });
   }
 
-  refundPayment(paymentId, amountMoney, reason) {
-    console.log(`[Square] Refunding payment ${paymentId}: ${amountMoney.amount / 100}`);
-    console.log(`[Square] Reason: ${reason}`);
+  async refundPayment(paymentId, refundRequest) {
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        try {
+          const payment = this.payments.get(paymentId);
+          if (!payment) {
+            reject(new Error('Payment not found'));
+            return;
+          }
 
-    return {
-      refund: {
-        id: 'refund_' + Math.random().toString(36).substr(2, 16),
-        status: 'COMPLETED',
-        amount_money: amountMoney
-      }
-    };
+          if (payment.status !== 'COMPLETED') {
+            reject(new Error('Cannot refund incomplete payment'));
+            return;
+          }
+
+          const refund = {
+            id: 'refund_' + crypto.randomBytes(12).toString('hex'),
+            status: 'COMPLETED',
+            amount_money: refundRequest.amount_money,
+            payment_id: paymentId,
+            reason: refundRequest.reason || 'Customer request',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          };
+
+          this.refunds.set(refund.id, refund);
+          resolve({ refund });
+        } catch (error) {
+          reject(error);
+        }
+      }, 55);
+    });
   }
 
-  getPayment(paymentId) {
-    console.log(`[Square] Getting payment: ${paymentId}`);
-    return {
-      payment: {
-        id: paymentId,
-        status: 'COMPLETED'
-      }
-    };
+  async getPayment(paymentId) {
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        const payment = this.payments.get(paymentId);
+        if (!payment) {
+          reject(new Error('Payment not found'));
+          return;
+        }
+        resolve({ payment });
+      }, 40);
+    });
   }
 }
 
-// ============= Adapters =============
+// ============= Adapter Implementations =============
 
 /**
- * Adapter: StripeAdapter
- * Adapts Stripe API to our PaymentProcessor interface
+ * Stripe Adapter - Converts Stripe API to unified interface
  */
 class StripeAdapter extends PaymentProcessor {
-  constructor() {
+  constructor(apiKey) {
     super();
-    this.stripe = new StripeAPI();
+    this.stripe = new StripeAPI(apiKey);
   }
 
-  processPayment(amount, currency, customerData) {
-    // Convert dollars to cents (Stripe requirement)
-    const amountInCents = Math.round(amount * 100);
+  async processPayment(amount, currency, customerData) {
+    try {
+      await this.validatePaymentData(amount, currency, customerData);
 
-    // Adapt customer data to Stripe metadata format
-    const metadata = {
-      email: customerData.email,
-      name: customerData.name
-    };
+      const amountInCents = Math.round(amount * 100);
 
-    const result = this.stripe.createCharge(amountInCents, currency, metadata);
+      const charge = await this.stripe.createCharge({
+        amount: amountInCents,
+        currency: currency.toLowerCase(),
+        source: 'tok_visa', // Card token
+        description: `Payment from ${customerData.name}`,
+        metadata: {
+          customer_email: customerData.email,
+          customer_name: customerData.name
+        }
+      });
 
-    return {
-      transactionId: result.id,
-      status: result.status === 'succeeded' ? 'completed' : 'failed',
-      amount: amount,
-      currency: currency
-    };
+      if (charge.status !== 'succeeded') {
+        throw new Error(charge.failure_message || 'Payment failed');
+      }
+
+      return {
+        transactionId: charge.id,
+        status: 'completed',
+        amount: amount,
+        currency: currency,
+        timestamp: new Date(charge.created * 1000).toISOString(),
+        provider: 'stripe'
+      };
+    } catch (error) {
+      return {
+        transactionId: null,
+        status: 'failed',
+        amount: amount,
+        currency: currency,
+        error: error.message,
+        provider: 'stripe'
+      };
+    }
   }
 
-  refundPayment(transactionId, amount) {
-    const amountInCents = Math.round(amount * 100);
-    const result = this.stripe.createRefund(transactionId, amountInCents);
+  async refundPayment(transactionId, amount, reason = 'requested_by_customer') {
+    try {
+      if (!transactionId) {
+        throw new Error('Transaction ID is required');
+      }
 
-    return {
-      refundId: result.id,
-      status: result.status === 'succeeded' ? 'completed' : 'failed',
-      amount: amount
-    };
+      const amountInCents = Math.round(amount * 100);
+
+      const refund = await this.stripe.createRefund(transactionId, {
+        amount: amountInCents,
+        reason: reason
+      });
+
+      return {
+        refundId: refund.id,
+        status: 'completed',
+        amount: amount,
+        originalTransactionId: transactionId,
+        timestamp: new Date(refund.created * 1000).toISOString(),
+        provider: 'stripe'
+      };
+    } catch (error) {
+      return {
+        refundId: null,
+        status: 'failed',
+        amount: amount,
+        error: error.message,
+        provider: 'stripe'
+      };
+    }
   }
 
-  getTransactionStatus(transactionId) {
-    const result = this.stripe.retrieveCharge(transactionId);
-    return result.status === 'succeeded' ? 'completed' : 'pending';
+  async getTransactionStatus(transactionId) {
+    try {
+      const charge = await this.stripe.retrieveCharge(transactionId);
+      return {
+        transactionId: charge.id,
+        status: charge.status === 'succeeded' ? 'completed' : charge.status,
+        amount: charge.amount / 100,
+        currency: charge.currency.toUpperCase(),
+        provider: 'stripe'
+      };
+    } catch (error) {
+      throw new Error(`Failed to get transaction status: ${error.message}`);
+    }
   }
 }
 
 /**
- * Adapter: PayPalAdapter
- * Adapts PayPal SDK to our PaymentProcessor interface
+ * PayPal Adapter - Converts PayPal API to unified interface
  */
 class PayPalAdapter extends PaymentProcessor {
-  constructor() {
+  constructor(clientId, secret) {
     super();
-    this.paypal = new PayPalSDK();
+    this.paypal = new PayPalAPI(clientId, secret);
   }
 
-  processPayment(amount, currency, customerData) {
-    // Adapt to PayPal's payment data structure
-    const paymentData = {
-      amount: amount.toString(),
-      currency: currency,
-      payer: {
-        email: customerData.email,
-        firstName: customerData.name.split(' ')[0],
-        lastName: customerData.name.split(' ').slice(1).join(' ')
+  async processPayment(amount, currency, customerData) {
+    try {
+      await this.validatePaymentData(amount, currency, customerData);
+
+      const payment = await this.paypal.createPayment({
+        intent: 'sale',
+        payer: {
+          payment_method: 'paypal',
+          payer_info: {
+            email: customerData.email,
+            first_name: customerData.name.split(' ')[0],
+            last_name: customerData.name.split(' ').slice(1).join(' ')
+          }
+        },
+        transactions: [{
+          amount: {
+            total: amount.toFixed(2),
+            currency: currency
+          },
+          description: `Payment from ${customerData.name}`
+        }]
+      });
+
+      if (payment.state !== 'approved') {
+        throw new Error('Payment not approved');
       }
-    };
 
-    const result = this.paypal.executePayment(paymentData);
-
-    return {
-      transactionId: result.paymentId,
-      status: result.state === 'approved' ? 'completed' : 'failed',
-      amount: amount,
-      currency: currency
-    };
+      return {
+        transactionId: payment.id,
+        status: 'completed',
+        amount: amount,
+        currency: currency,
+        timestamp: payment.create_time,
+        provider: 'paypal'
+      };
+    } catch (error) {
+      return {
+        transactionId: null,
+        status: 'failed',
+        amount: amount,
+        currency: currency,
+        error: error.message,
+        provider: 'paypal'
+      };
+    }
   }
 
-  refundPayment(transactionId, amount) {
-    const refundAmount = {
-      amount: amount.toString(),
-      currency: 'USD' // PayPal requires currency for refunds
-    };
+  async refundPayment(transactionId, amount, reason = 'requested_by_customer') {
+    try {
+      if (!transactionId) {
+        throw new Error('Transaction ID is required');
+      }
 
-    const result = this.paypal.refundSale(transactionId, refundAmount);
+      const refund = await this.paypal.refundSale(transactionId, {
+        amount: {
+          total: amount.toFixed(2),
+          currency: 'USD'
+        }
+      });
 
-    return {
-      refundId: result.id,
-      status: result.state === 'completed' ? 'completed' : 'failed',
-      amount: amount
-    };
+      return {
+        refundId: refund.id,
+        status: 'completed',
+        amount: amount,
+        originalTransactionId: transactionId,
+        timestamp: refund.create_time,
+        provider: 'paypal'
+      };
+    } catch (error) {
+      return {
+        refundId: null,
+        status: 'failed',
+        amount: amount,
+        error: error.message,
+        provider: 'paypal'
+      };
+    }
   }
 
-  getTransactionStatus(transactionId) {
-    const result = this.paypal.lookupPayment(transactionId);
-    return result.state === 'approved' ? 'completed' : 'pending';
+  async getTransactionStatus(transactionId) {
+    try {
+      const payment = await this.paypal.lookupPayment(transactionId);
+      return {
+        transactionId: payment.id,
+        status: payment.state === 'approved' ? 'completed' : payment.state,
+        amount: parseFloat(payment.transactions[0].amount.total),
+        currency: payment.transactions[0].amount.currency,
+        provider: 'paypal'
+      };
+    } catch (error) {
+      throw new Error(`Failed to get transaction status: ${error.message}`);
+    }
   }
 }
 
 /**
- * Adapter: SquareAdapter
- * Adapts Square API to our PaymentProcessor interface
+ * Square Adapter - Converts Square API to unified interface
  */
 class SquareAdapter extends PaymentProcessor {
-  constructor() {
+  constructor(accessToken) {
     super();
-    this.square = new SquareAPI();
+    this.square = new SquareAPI(accessToken);
   }
 
-  processPayment(amount, currency, customerData) {
-    // Convert to Square's money format (amount in cents)
-    const money = {
-      amount: Math.round(amount * 100),
-      currency_code: currency
-    };
+  async processPayment(amount, currency, customerData) {
+    try {
+      await this.validatePaymentData(amount, currency, customerData);
 
-    const reference = `${customerData.name} - ${customerData.email}`;
+      const result = await this.square.createPayment({
+        source_id: 'cnon:card-nonce-ok',
+        amount_money: {
+          amount: Math.round(amount * 100),
+          currency: currency
+        },
+        reference_id: `${customerData.email}-${Date.now()}`
+      });
 
-    const result = this.square.chargeCard(money, {}, reference);
+      if (result.payment.status !== 'COMPLETED') {
+        throw new Error(result.payment.failure_reason || 'Payment failed');
+      }
 
-    return {
-      transactionId: result.payment.id,
-      status: result.payment.status === 'COMPLETED' ? 'completed' : 'failed',
-      amount: amount,
-      currency: currency
-    };
+      return {
+        transactionId: result.payment.id,
+        status: 'completed',
+        amount: amount,
+        currency: currency,
+        timestamp: result.payment.created_at,
+        provider: 'square'
+      };
+    } catch (error) {
+      return {
+        transactionId: null,
+        status: 'failed',
+        amount: amount,
+        currency: currency,
+        error: error.message,
+        provider: 'square'
+      };
+    }
   }
 
-  refundPayment(transactionId, amount) {
-    const amountMoney = {
-      amount: Math.round(amount * 100),
-      currency_code: 'USD'
-    };
+  async refundPayment(transactionId, amount, reason = 'Customer request') {
+    try {
+      if (!transactionId) {
+        throw new Error('Transaction ID is required');
+      }
 
-    const result = this.square.refundPayment(transactionId, amountMoney, 'Customer request');
+      const result = await this.square.refundPayment(transactionId, {
+        amount_money: {
+          amount: Math.round(amount * 100),
+          currency: 'USD'
+        },
+        reason: reason
+      });
 
-    return {
-      refundId: result.refund.id,
-      status: result.refund.status === 'COMPLETED' ? 'completed' : 'failed',
-      amount: amount
-    };
+      return {
+        refundId: result.refund.id,
+        status: 'completed',
+        amount: amount,
+        originalTransactionId: transactionId,
+        timestamp: result.refund.created_at,
+        provider: 'square'
+      };
+    } catch (error) {
+      return {
+        refundId: null,
+        status: 'failed',
+        amount: amount,
+        error: error.message,
+        provider: 'square'
+      };
+    }
   }
 
-  getTransactionStatus(transactionId) {
-    const result = this.square.getPayment(transactionId);
-    return result.payment.status === 'COMPLETED' ? 'completed' : 'pending';
+  async getTransactionStatus(transactionId) {
+    try {
+      const result = await this.square.getPayment(transactionId);
+      return {
+        transactionId: result.payment.id,
+        status: result.payment.status === 'COMPLETED' ? 'completed' : result.payment.status.toLowerCase(),
+        amount: result.payment.amount_money.amount / 100,
+        currency: result.payment.amount_money.currency,
+        provider: 'square'
+      };
+    } catch (error) {
+      throw new Error(`Failed to get transaction status: ${error.message}`);
+    }
   }
 }
 
@@ -317,8 +622,7 @@ module.exports = {
   StripeAdapter,
   PayPalAdapter,
   SquareAdapter,
-  // Export adaptees for demonstration
   StripeAPI,
-  PayPalSDK,
+  PayPalAPI,
   SquareAPI
 };

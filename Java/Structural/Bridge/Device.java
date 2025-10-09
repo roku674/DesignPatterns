@@ -1,19 +1,38 @@
+import java.sql.ResultSet;
+import java.util.List;
+import java.util.Map;
+
 /**
- * Implementation interface - defines operations for all concrete implementations
+ * Implementation interface - defines database operations
  */
 public interface Device {
+    /**
+     * Connects to the database
+     */
+    void connect() throws Exception;
 
-    boolean isEnabled();
+    /**
+     * Disconnects from the database
+     */
+    void disconnect() throws Exception;
 
-    void enable();
+    /**
+     * Checks if connected
+     */
+    boolean isConnected();
 
-    void disable();
+    /**
+     * Executes a query and returns results
+     */
+    List<Map<String, Object>> executeQuery(String query) throws Exception;
 
-    int getVolume();
+    /**
+     * Executes an update/insert/delete command
+     */
+    int executeUpdate(String query) throws Exception;
 
-    void setVolume(int percent);
-
-    int getChannel();
-
-    void setChannel(int channel);
+    /**
+     * Gets the database type
+     */
+    String getDatabaseType();
 }

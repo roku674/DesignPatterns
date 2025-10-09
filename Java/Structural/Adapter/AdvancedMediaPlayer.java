@@ -1,19 +1,22 @@
 /**
- * Adaptee interface - the incompatible interface that needs to be adapted
+ * Adaptee interface - legacy API with different response format (XML/CSV)
  */
 public interface AdvancedMediaPlayer {
+    /**
+     * Fetches XML data from endpoint
+     *
+     * @param endpoint the API endpoint
+     * @return XML response as String
+     * @throws Exception if the request fails
+     */
+    String fetchXmlData(String endpoint) throws Exception;
 
     /**
-     * Plays VLC format audio
+     * Fetches CSV data from endpoint
      *
-     * @param fileName the name of the VLC file
+     * @param endpoint the API endpoint
+     * @return CSV response as String
+     * @throws Exception if the request fails
      */
-    void playVlc(String fileName);
-
-    /**
-     * Plays MP4 format audio
-     *
-     * @param fileName the name of the MP4 file
-     */
-    void playMp4(String fileName);
+    String fetchCsvData(String endpoint) throws Exception;
 }

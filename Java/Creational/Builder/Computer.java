@@ -1,127 +1,338 @@
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 /**
- * Product class - represents a complex object being built
+ * Product class - represents a complex HTTP request being built
  */
-public class Computer {
+public class HttpRequest {
 
-    // Required parameters
-    private final String cpu;
-    private final String ram;
-
-    // Optional parameters
-    private final String storage;
-    private final String gpu;
-    private final String motherboard;
-    private final String powerSupply;
-    private final String coolingSystem;
-    private final boolean isWifiEnabled;
-    private final boolean isBluetoothEnabled;
+    private final String url;
+    private final String method;
+    private final Map<String, String> headers;
+    private final String body;
+    private final int connectTimeout;
+    private final int readTimeout;
+    private final boolean followRedirects;
 
     /**
      * Private constructor - only accessible through Builder
      */
-    private Computer(ComputerBuilder builder) {
-        this.cpu = builder.cpu;
-        this.ram = builder.ram;
-        this.storage = builder.storage;
-        this.gpu = builder.gpu;
-        this.motherboard = builder.motherboard;
-        this.powerSupply = builder.powerSupply;
-        this.coolingSystem = builder.coolingSystem;
-        this.isWifiEnabled = builder.isWifiEnabled;
-        this.isBluetoothEnabled = builder.isBluetoothEnabled;
+    private HttpRequest(HttpRequestBuilder builder) {
+        this.url = builder.url;
+        this.method = builder.method;
+        this.headers = builder.headers;
+        this.body = builder.body;
+        this.connectTimeout = builder.connectTimeout;
+        this.readTimeout = builder.readTimeout;
+        this.followRedirects = builder.followRedirects;
     }
 
     /**
-     * Gets the computer specifications as a formatted string
+     * Executes the HTTP request and returns the response
      *
-     * @return formatted specifications
+     * @return HttpResponse object containing status code and body
+     * @throws IOException if the request fails
      */
-    public String getSpecs() {
-        StringBuilder specs = new StringBuilder();
-        specs.append("\n=== Computer Specifications ===\n");
-        specs.append("CPU: ").append(cpu).append("\n");
-        specs.append("RAM: ").append(ram).append("\n");
-        specs.append("Storage: ").append(storage != null ? storage : "Not specified").append("\n");
-        specs.append("GPU: ").append(gpu != null ? gpu : "Integrated Graphics").append("\n");
-        specs.append("Motherboard: ").append(motherboard != null ? motherboard : "Standard").append("\n");
-        specs.append("Power Supply: ").append(powerSupply != null ? powerSupply : "Standard").append("\n");
-        specs.append("Cooling: ").append(coolingSystem != null ? coolingSystem : "Stock Cooler").append("\n");
-        specs.append("WiFi: ").append(isWifiEnabled ? "Enabled" : "Disabled").append("\n");
-        specs.append("Bluetooth: ").append(isBluetoothEnabled ? "Enabled" : "Disabled").append("\n");
-        specs.append("==============================\n");
-        return specs.toString();
+    public HttpResponse execute() throws IOException {
+        URL urlObject = new URL(url);
+        HttpURLConnection connection = (HttpURLConnection) urlObject.openConnection();
+
+        try {
+            connection.setRequestMethod(method);
+            connection.setConnectTimeout(connectTimeout);
+            connection.setReadTimeout(readTimeout);
+            connection.setInstanceFollowRedirects(followRedirects);
+
+            // Set headers
+            for (Map.Entry<String, String> header : headers.entrySet()) {
+                connection.setRequestProperty(header.getKey(), header.getValue());
+            }
+
+            // Send request body if present
+            if (body != null && !body.isEmpty() &&
+                (method.equals("POST") || method.equals("PUT") || method.equals("PATCH"))) {
+                connection.setDoOutput(true);
+                try (OutputStream os = connection.getOutputStream()) {
+                    byte[] input = body.getBytes(StandardCharsets.UTF_8);
+                    os.write(input, 0, input.length);
+                }
+            }
+
+            // Get response
+            int statusCode = connection.getResponseCode();
+            String responseBody;
+
+            try {
+                BufferedReader br;
+                if (statusCode >= 200 && statusCode < 300) {
+                    br = new BufferedReader(new InputStreamReader(
+                        connection.getInputStream(), StandardCharsets.UTF_8));
+                } else {
+                    br = new BufferedReader(new InputStreamReader(
+                        connection.getErrorStream(), StandardCharsets.UTF_8));
+                }
+
+                responseBody = br.lines().collect(Collectors.joining("\n"));
+                br.close();
+            } catch (Exception e) {
+                responseBody = "";
+            }
+
+            return new HttpResponse(statusCode, responseBody, connection.getHeaderFields());
+
+        } finally {
+            connection.disconnect();
+        }
     }
 
     /**
-     * Static Builder class for constructing Computer objects
+     * Gets the request URL
      */
-    public static class ComputerBuilder {
-        // Required parameters
-        private final String cpu;
-        private final String ram;
+    public String getUrl() {
+        return url;
+    }
 
-        // Optional parameters - initialized to default values
-        private String storage = "256GB SSD";
-        private String gpu = null;
-        private String motherboard = null;
-        private String powerSupply = null;
-        private String coolingSystem = null;
-        private boolean isWifiEnabled = false;
-        private boolean isBluetoothEnabled = false;
+    /**
+     * Gets the request method
+     */
+    public String getMethod() {
+        return method;
+    }
 
-        /**
-         * Constructor with required parameters
-         *
-         * @param cpu the processor
-         * @param ram the memory
-         */
-        public ComputerBuilder(String cpu, String ram) {
-            this.cpu = cpu;
-            this.ram = ram;
-        }
+    /**
+     * Gets the request headers
+     */
+    public Map<String, String> getHeaders() {
+        return new HashMap<>(headers);
+    }
 
-        public ComputerBuilder storage(String storage) {
-            this.storage = storage;
-            return this;
-        }
+    /**
+     * Gets the request body
+     */
+    public String getBody() {
+        return body;
+    }
 
-        public ComputerBuilder gpu(String gpu) {
-            this.gpu = gpu;
-            return this;
-        }
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("HttpRequest {\n");
+        sb.append("  URL: ").append(url).append("\n");
+        sb.append("  Method: ").append(method).append("\n");
+        sb.append("  Headers: ").append(headers).append("\n");
+        sb.append("  Body: ").append(body != null ? body.substring(0, Math.min(100, body.length())) : "null").append("\n");
+        sb.append("  Connect Timeout: ").append(connectTimeout).append("ms\n");
+        sb.append("  Read Timeout: ").append(readTimeout).append("ms\n");
+        sb.append("  Follow Redirects: ").append(followRedirects).append("\n");
+        sb.append("}");
+        return sb.toString();
+    }
 
-        public ComputerBuilder motherboard(String motherboard) {
-            this.motherboard = motherboard;
-            return this;
-        }
+    /**
+     * Static Builder class for constructing HttpRequest objects
+     */
+    public static class HttpRequestBuilder {
+        // Required parameter
+        private final String url;
 
-        public ComputerBuilder powerSupply(String powerSupply) {
-            this.powerSupply = powerSupply;
-            return this;
-        }
-
-        public ComputerBuilder coolingSystem(String coolingSystem) {
-            this.coolingSystem = coolingSystem;
-            return this;
-        }
-
-        public ComputerBuilder enableWifi() {
-            this.isWifiEnabled = true;
-            return this;
-        }
-
-        public ComputerBuilder enableBluetooth() {
-            this.isBluetoothEnabled = true;
-            return this;
-        }
+        // Optional parameters with default values
+        private String method = "GET";
+        private Map<String, String> headers = new HashMap<>();
+        private String body = null;
+        private int connectTimeout = 5000;
+        private int readTimeout = 5000;
+        private boolean followRedirects = true;
 
         /**
-         * Builds and returns the Computer object
+         * Constructor with required URL parameter
          *
-         * @return a new Computer instance
+         * @param url the target URL
          */
-        public Computer build() {
-            return new Computer(this);
+        public HttpRequestBuilder(String url) {
+            if (url == null || url.trim().isEmpty()) {
+                throw new IllegalArgumentException("URL cannot be null or empty");
+            }
+            this.url = url;
+        }
+
+        /**
+         * Sets the HTTP method (GET, POST, PUT, DELETE, etc.)
+         */
+        public HttpRequestBuilder method(String method) {
+            this.method = method.toUpperCase();
+            return this;
+        }
+
+        /**
+         * Convenience method for GET requests
+         */
+        public HttpRequestBuilder get() {
+            this.method = "GET";
+            return this;
+        }
+
+        /**
+         * Convenience method for POST requests
+         */
+        public HttpRequestBuilder post() {
+            this.method = "POST";
+            return this;
+        }
+
+        /**
+         * Convenience method for PUT requests
+         */
+        public HttpRequestBuilder put() {
+            this.method = "PUT";
+            return this;
+        }
+
+        /**
+         * Convenience method for DELETE requests
+         */
+        public HttpRequestBuilder delete() {
+            this.method = "DELETE";
+            return this;
+        }
+
+        /**
+         * Adds a single header
+         */
+        public HttpRequestBuilder header(String key, String value) {
+            this.headers.put(key, value);
+            return this;
+        }
+
+        /**
+         * Adds multiple headers
+         */
+        public HttpRequestBuilder headers(Map<String, String> headers) {
+            this.headers.putAll(headers);
+            return this;
+        }
+
+        /**
+         * Sets the Content-Type header
+         */
+        public HttpRequestBuilder contentType(String contentType) {
+            this.headers.put("Content-Type", contentType);
+            return this;
+        }
+
+        /**
+         * Sets JSON content type
+         */
+        public HttpRequestBuilder json() {
+            return contentType("application/json");
+        }
+
+        /**
+         * Sets the Authorization header
+         */
+        public HttpRequestBuilder authorization(String token) {
+            this.headers.put("Authorization", token);
+            return this;
+        }
+
+        /**
+         * Sets Bearer token authorization
+         */
+        public HttpRequestBuilder bearerToken(String token) {
+            return authorization("Bearer " + token);
+        }
+
+        /**
+         * Sets the request body
+         */
+        public HttpRequestBuilder body(String body) {
+            this.body = body;
+            return this;
+        }
+
+        /**
+         * Sets JSON body
+         */
+        public HttpRequestBuilder jsonBody(String json) {
+            this.body = json;
+            return json().post();
+        }
+
+        /**
+         * Sets the connection timeout in milliseconds
+         */
+        public HttpRequestBuilder connectTimeout(int timeout) {
+            this.connectTimeout = timeout;
+            return this;
+        }
+
+        /**
+         * Sets the read timeout in milliseconds
+         */
+        public HttpRequestBuilder readTimeout(int timeout) {
+            this.readTimeout = timeout;
+            return this;
+        }
+
+        /**
+         * Sets whether to follow redirects
+         */
+        public HttpRequestBuilder followRedirects(boolean follow) {
+            this.followRedirects = follow;
+            return this;
+        }
+
+        /**
+         * Builds and returns the HttpRequest object
+         *
+         * @return a new HttpRequest instance
+         */
+        public HttpRequest build() {
+            return new HttpRequest(this);
+        }
+    }
+
+    /**
+     * Inner class to represent HTTP response
+     */
+    public static class HttpResponse {
+        private final int statusCode;
+        private final String body;
+        private final Map<String, java.util.List<String>> headers;
+
+        public HttpResponse(int statusCode, String body, Map<String, java.util.List<String>> headers) {
+            this.statusCode = statusCode;
+            this.body = body;
+            this.headers = headers;
+        }
+
+        public int getStatusCode() {
+            return statusCode;
+        }
+
+        public String getBody() {
+            return body;
+        }
+
+        public Map<String, java.util.List<String>> getHeaders() {
+            return headers;
+        }
+
+        public boolean isSuccess() {
+            return statusCode >= 200 && statusCode < 300;
+        }
+
+        @Override
+        public String toString() {
+            return String.format("HttpResponse{statusCode=%d, bodyLength=%d}",
+                statusCode, body != null ? body.length() : 0);
         }
     }
 }

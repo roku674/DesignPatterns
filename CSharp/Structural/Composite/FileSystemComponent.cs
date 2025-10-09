@@ -1,49 +1,23 @@
+using System.IO;
+using System.Threading.Tasks;
+using System.Collections.Generic;
+
 namespace Composite;
 
 /// <summary>
-/// Base component class for both files and directories.
-/// Declares common operations for both simple and complex objects.
+/// Component interface for the Composite pattern.
+/// Represents both individual files and directories in a REAL file system.
 /// </summary>
 public abstract class FileSystemComponent
 {
-    protected string _name;
-
-    public FileSystemComponent(string name)
-    {
-        _name = name;
-    }
-
-    public virtual string GetName() => _name;
-
-    /// <summary>
-    /// Returns the size of the component in KB.
-    /// </summary>
-    public abstract int GetSize();
-
-    /// <summary>
-    /// Displays the component structure.
-    /// </summary>
+    public abstract string Name { get; }
+    public abstract string Path { get; }
+    public abstract long GetSize();
+    public abstract Task<long> GetSizeAsync();
     public abstract void Display(int depth = 0);
-
-    /// <summary>
-    /// Adds a child component. Default implementation throws exception.
-    /// Only implemented by Composite (Directory).
-    /// </summary>
-    public virtual void Add(FileSystemComponent component)
-    {
-        throw new NotImplementedException("Cannot add to a leaf component");
-    }
-
-    /// <summary>
-    /// Removes a child component.
-    /// </summary>
-    public virtual void Remove(FileSystemComponent component)
-    {
-        throw new NotImplementedException("Cannot remove from a leaf component");
-    }
-
-    /// <summary>
-    /// Checks if this component can have children.
-    /// </summary>
-    public virtual bool IsComposite() => false;
+    public abstract bool IsDirectory();
+    public abstract Task<bool> DeleteAsync();
+    public abstract Task<bool> CopyToAsync(string destinationPath);
+    public abstract FileSystemComponent? Find(string name);
+    public abstract List<FileSystemComponent> GetAll();
 }

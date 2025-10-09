@@ -1,5 +1,8 @@
+import java.util.List;
+import java.util.Map;
+
 /**
- * Abstraction - defines high-level control interface
+ * Abstraction - defines high-level database operations interface
  */
 public class RemoteControl {
     protected Device device;
@@ -8,32 +11,33 @@ public class RemoteControl {
         this.device = device;
     }
 
-    public void togglePower() {
-        System.out.print("RemoteControl: ");
-        if (device.isEnabled()) {
-            device.disable();
-        } else {
-            device.enable();
+    public void open() throws Exception {
+        System.out.println("RemoteControl: Opening database connection");
+        device.connect();
+    }
+
+    public void close() throws Exception {
+        System.out.println("RemoteControl: Closing database connection");
+        device.disconnect();
+    }
+
+    public List<Map<String, Object>> findAll(String tableName) throws Exception {
+        if (!device.isConnected()) {
+            throw new Exception("Database not connected");
         }
+        System.out.println("RemoteControl: Finding all records from " + tableName);
+        return device.executeQuery("SELECT * FROM " + tableName);
     }
 
-    public void volumeDown() {
-        System.out.print("RemoteControl: ");
-        device.setVolume(device.getVolume() - 10);
+    public int insert(String tableName, Map<String, Object> data) throws Exception {
+        if (!device.isConnected()) {
+            throw new Exception("Database not connected");
+        }
+        System.out.println("RemoteControl: Inserting record into " + tableName);
+        return device.executeUpdate("INSERT INTO " + tableName + " VALUES (...)");
     }
 
-    public void volumeUp() {
-        System.out.print("RemoteControl: ");
-        device.setVolume(device.getVolume() + 10);
-    }
-
-    public void channelDown() {
-        System.out.print("RemoteControl: ");
-        device.setChannel(device.getChannel() - 1);
-    }
-
-    public void channelUp() {
-        System.out.print("RemoteControl: ");
-        device.setChannel(device.getChannel() + 1);
+    public String getDatabaseInfo() {
+        return "Connected to: " + device.getDatabaseType();
     }
 }

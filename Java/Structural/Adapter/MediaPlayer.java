@@ -1,13 +1,15 @@
+import java.util.Map;
+
 /**
- * Target interface - the interface that clients expect
+ * Target interface - standard API response interface
  */
 public interface MediaPlayer {
-
     /**
-     * Plays audio in the specified format
+     * Fetches data from an API endpoint
      *
-     * @param audioType the type of audio file
-     * @param fileName the name of the file to play
+     * @param endpoint the API endpoint
+     * @return response data as a Map
+     * @throws Exception if the request fails
      */
-    void play(String audioType, String fileName);
+    Map<String, Object> fetchData(String endpoint) throws Exception;
 }

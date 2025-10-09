@@ -1,248 +1,458 @@
 /**
- * Proxy Pattern - Image Loading and Caching Example
+ * Proxy Pattern - REAL Production Implementation
  *
- * The Proxy pattern provides a substitute or placeholder for another object.
- * A proxy controls access to the original object, allowing you to perform
- * something either before or after the request gets to the original object.
+ * Real proxy implementations with caching, lazy loading, access control,
+ * logging, and performance monitoring.
  */
+
+const crypto = require('crypto');
 
 // ============= Subject Interface =============
 
-/**
- * Image Interface
- */
-class Image {
-  display() {
-    throw new Error('Method display() must be implemented');
+class Resource {
+  async load() {
+    throw new Error('Method load() must be implemented');
   }
 
-  getInfo() {
-    throw new Error('Method getInfo() must be implemented');
+  async getData() {
+    throw new Error('Method getData() must be implemented');
   }
 }
 
 // ============= Real Subject =============
 
-/**
- * RealImage - The actual object that does the real work
- * Expensive to create (simulates loading from disk/network)
- */
-class RealImage extends Image {
-  constructor(filename) {
+class ExpensiveResource extends Resource {
+  constructor(id, data) {
     super();
-    this.filename = filename;
-    this.loadTime = null;
-    this.loadFromDisk();
+    this.id = id;
+    this.rawData = data;
+    this.loaded = false;
+    this.loadTime = 0;
   }
 
-  loadFromDisk() {
-    const startTime = Date.now();
-    console.log(`[RealImage] Loading ${this.filename} from disk...`);
-
+  async load() {
+    const start = Date.now();
     // Simulate expensive loading operation
-    const sleep = (ms) => {
-      const start = Date.now();
-      while (Date.now() - start < ms) {}
-    };
-    sleep(100); // Simulate 100ms load time
+    await new Promise(resolve => setTimeout(resolve, 200));
 
-    this.loadTime = Date.now() - startTime;
-    console.log(`[RealImage] ${this.filename} loaded in ${this.loadTime}ms`);
+    this.loaded = true;
+    this.loadTime = Date.now() - start;
+
+    return { success: true, loadTime: this.loadTime };
   }
 
-  display() {
-    console.log(`[RealImage] Displaying ${this.filename}`);
-  }
+  async getData() {
+    if (!this.loaded) {
+      throw new Error('Resource not loaded');
+    }
 
-  getInfo() {
     return {
-      filename: this.filename,
-      type: 'RealImage',
-      loaded: true,
-      loadTime: this.loadTime
+      id: this.id,
+      data: this.rawData,
+      timestamp: Date.now()
     };
   }
+
+  isLoaded() {
+    return this.loaded;
+  }
 }
 
-// ============= Proxies =============
+// ============= Virtual Proxy (Lazy Loading) =============
 
-/**
- * VirtualProxy - Lazy loading
- * Delays creation of expensive object until it's actually needed
- */
-class ImageProxy extends Image {
-  constructor(filename) {
+class LazyResourceProxy extends Resource {
+  constructor(id, data) {
     super();
-    this.filename = filename;
-    this.realImage = null;
+    this.id = id;
+    this.data = data;
+    this.resource = null;
+    this.loadAttempts = 0;
   }
 
-  display() {
-    if (this.realImage === null) {
-      console.log('[Proxy] First access - creating real image...');
-      this.realImage = new RealImage(this.filename);
+  async load() {
+    if (this.resource === null) {
+      this.loadAttempts++;
+      this.resource = new ExpensiveResource(this.id, this.data);
+      return await this.resource.load();
+    }
+
+    return { success: true, cached: true };
+  }
+
+  async getData() {
+    if (this.resource === null) {
+      await this.load();
+    }
+
+    return await this.resource.getData();
+  }
+
+  isLoaded() {
+    return this.resource !== null && this.resource.isLoaded();
+  }
+
+  getLoadAttempts() {
+    return this.loadAttempts;
+  }
+}
+
+// ============= Caching Proxy =============
+
+class CachingProxy {
+  constructor(target, options = {}) {
+    this.target = target;
+    this.cache = new Map();
+    this.timestamps = new Map();
+    this.ttl = options.ttl || 5000;
+    this.maxSize = options.maxSize || 100;
+    this.hits = 0;
+    this.misses = 0;
+  }
+
+  async execute(methodName, ...args) {
+    const cacheKey = this.generateCacheKey(methodName, args);
+
+    // Check cache
+    if (this.cache.has(cacheKey)) {
+      const timestamp = this.timestamps.get(cacheKey);
+      if (Date.now() - timestamp < this.ttl) {
+        this.hits++;
+        return { ...this.cache.get(cacheKey), cached: true };
+      } else {
+        // Expired
+        this.cache.delete(cacheKey);
+        this.timestamps.delete(cacheKey);
+      }
+    }
+
+    // Cache miss - execute method
+    this.misses++;
+
+    if (typeof this.target[methodName] !== 'function') {
+      throw new Error(`Method ${methodName} does not exist on target`);
+    }
+
+    const result = await this.target[methodName](...args);
+
+    // Store in cache
+    this.storeInCache(cacheKey, result);
+
+    return { ...result, cached: false };
+  }
+
+  generateCacheKey(methodName, args) {
+    const argsHash = crypto
+      .createHash('md5')
+      .update(JSON.stringify(args))
+      .digest('hex');
+
+    return `${methodName}:${argsHash}`;
+  }
+
+  storeInCache(key, value) {
+    // Evict oldest if cache is full
+    if (this.cache.size >= this.maxSize) {
+      const oldestKey = this.cache.keys().next().value;
+      this.cache.delete(oldestKey);
+      this.timestamps.delete(oldestKey);
+    }
+
+    this.cache.set(key, value);
+    this.timestamps.set(key, Date.now());
+  }
+
+  invalidate(methodName = null) {
+    if (methodName) {
+      // Invalidate specific method cache
+      for (const key of this.cache.keys()) {
+        if (key.startsWith(methodName + ':')) {
+          this.cache.delete(key);
+          this.timestamps.delete(key);
+        }
+      }
     } else {
-      console.log('[Proxy] Using cached image...');
-    }
-
-    this.realImage.display();
-  }
-
-  getInfo() {
-    if (this.realImage === null) {
-      return {
-        filename: this.filename,
-        type: 'Proxy',
-        loaded: false,
-        loadTime: null
-      };
-    }
-
-    return this.realImage.getInfo();
-  }
-}
-
-/**
- * ProtectionProxy - Access control
- * Checks permissions before allowing access to real object
- */
-class ProtectedImageProxy extends Image {
-  constructor(filename, requiredRole) {
-    super();
-    this.filename = filename;
-    this.requiredRole = requiredRole;
-    this.realImage = null;
-  }
-
-  checkAccess(userRole) {
-    const roles = ['guest', 'user', 'admin'];
-    const userLevel = roles.indexOf(userRole);
-    const requiredLevel = roles.indexOf(this.requiredRole);
-
-    return userLevel >= requiredLevel;
-  }
-
-  display(userRole = 'guest') {
-    if (!this.checkAccess(userRole)) {
-      console.log(`[ProtectedProxy] Access denied! Requires '${this.requiredRole}' role, you are '${userRole}'`);
-      return;
-    }
-
-    console.log(`[ProtectedProxy] Access granted for ${userRole}`);
-
-    if (this.realImage === null) {
-      this.realImage = new RealImage(this.filename);
-    }
-
-    this.realImage.display();
-  }
-
-  getInfo(userRole = 'guest') {
-    if (!this.checkAccess(userRole)) {
-      return {
-        filename: this.filename,
-        type: 'ProtectedProxy',
-        error: 'Access Denied',
-        requiredRole: this.requiredRole
-      };
-    }
-
-    if (this.realImage === null) {
-      this.realImage = new RealImage(this.filename);
-    }
-
-    return this.realImage.getInfo();
-  }
-}
-
-/**
- * CachingProxy - Caching
- * Caches results to avoid repeated expensive operations
- */
-class CachingImageProxy extends Image {
-  constructor(filename) {
-    super();
-    this.filename = filename;
-    this.realImage = new RealImage(filename);
-    this.displayCache = new Map();
-    this.cacheHits = 0;
-    this.cacheMisses = 0;
-  }
-
-  display(options = {}) {
-    const cacheKey = JSON.stringify(options);
-
-    if (this.displayCache.has(cacheKey)) {
-      this.cacheHits++;
-      console.log(`[CachingProxy] Cache HIT (${this.cacheHits} hits) - Returning cached result`);
-      console.log(this.displayCache.get(cacheKey));
-    } else {
-      this.cacheMisses++;
-      console.log(`[CachingProxy] Cache MISS (${this.cacheMisses} misses) - Computing result`);
-      this.realImage.display();
-
-      // Simulate some processing and cache the result
-      const result = `Processed display of ${this.filename} with options: ${cacheKey}`;
-      this.displayCache.set(cacheKey, result);
-      console.log(result);
+      // Clear all cache
+      this.cache.clear();
+      this.timestamps.clear();
     }
   }
 
-  getInfo() {
-    const info = this.realImage.getInfo();
-    info.cacheStats = {
-      hits: this.cacheHits,
-      misses: this.cacheMisses,
-      hitRate: this.cacheHits + this.cacheMisses > 0
-        ? ((this.cacheHits / (this.cacheHits + this.cacheMisses)) * 100).toFixed(2) + '%'
+  getStats() {
+    return {
+      size: this.cache.size,
+      hits: this.hits,
+      misses: this.misses,
+      hitRate: this.hits + this.misses > 0
+        ? ((this.hits / (this.hits + this.misses)) * 100).toFixed(2) + '%'
         : '0%'
     };
-    return info;
   }
 }
 
-/**
- * LoggingProxy - Logging
- * Logs all accesses to the real object
- */
-class LoggingImageProxy extends Image {
-  constructor(filename) {
-    super();
-    this.filename = filename;
-    this.realImage = new RealImage(filename);
+// ============= Protection Proxy (Access Control) =============
+
+class ProtectionProxy {
+  constructor(target, permissions) {
+    this.target = target;
+    this.permissions = permissions;
     this.accessLog = [];
   }
 
-  display() {
-    const logEntry = {
-      timestamp: new Date().toISOString(),
-      action: 'display',
-      filename: this.filename
-    };
-
-    this.accessLog.push(logEntry);
-    console.log(`[LoggingProxy] Logged access #${this.accessLog.length} at ${logEntry.timestamp}`);
-
-    this.realImage.display();
+  checkPermission(userId, action) {
+    const userPerms = this.permissions[userId] || [];
+    return userPerms.includes(action) || userPerms.includes('*');
   }
 
-  getInfo() {
-    return {
-      ...this.realImage.getInfo(),
-      totalAccesses: this.accessLog.length,
-      accessLog: this.accessLog
-    };
+  async execute(userId, methodName, ...args) {
+    const timestamp = Date.now();
+
+    // Log access attempt
+    this.accessLog.push({
+      userId,
+      methodName,
+      timestamp,
+      granted: false
+    });
+
+    // Check permission
+    if (!this.checkPermission(userId, methodName)) {
+      this.accessLog[this.accessLog.length - 1].granted = false;
+      throw new Error(`Access denied: User ${userId} cannot execute ${methodName}`);
+    }
+
+    // Permission granted
+    this.accessLog[this.accessLog.length - 1].granted = true;
+
+    if (typeof this.target[methodName] !== 'function') {
+      throw new Error(`Method ${methodName} does not exist on target`);
+    }
+
+    return await this.target[methodName](...args);
   }
 
   getAccessLog() {
-    return this.accessLog;
+    return [...this.accessLog];
+  }
+
+  getAccessStats(userId = null) {
+    const logs = userId
+      ? this.accessLog.filter(log => log.userId === userId)
+      : this.accessLog;
+
+    return {
+      total: logs.length,
+      granted: logs.filter(log => log.granted).length,
+      denied: logs.filter(log => !log.granted).length
+    };
   }
 }
 
+// ============= Logging Proxy =============
+
+class LoggingProxy {
+  constructor(target, options = {}) {
+    this.target = target;
+    this.logLevel = options.logLevel || 'info';
+    this.logs = [];
+  }
+
+  async execute(methodName, ...args) {
+    const startTime = Date.now();
+
+    this.log('info', `Executing ${methodName}`, { args });
+
+    try {
+      const result = await this.target[methodName](...args);
+      const duration = Date.now() - startTime;
+
+      this.log('info', `${methodName} completed`, { duration, result });
+
+      return result;
+    } catch (error) {
+      const duration = Date.now() - startTime;
+
+      this.log('error', `${methodName} failed`, { duration, error: error.message });
+
+      throw error;
+    }
+  }
+
+  log(level, message, data) {
+    const entry = {
+      level,
+      message,
+      data,
+      timestamp: new Date().toISOString()
+    };
+
+    this.logs.push(entry);
+
+    if (this.shouldLog(level)) {
+      console.log(`[${level.toUpperCase()}] ${message}`, data);
+    }
+  }
+
+  shouldLog(level) {
+    const levels = ['debug', 'info', 'warn', 'error'];
+    return levels.indexOf(level) >= levels.indexOf(this.logLevel);
+  }
+
+  getLogs(level = null) {
+    if (level) {
+      return this.logs.filter(log => log.level === level);
+    }
+    return [...this.logs];
+  }
+}
+
+// ============= Performance Monitoring Proxy =============
+
+class PerformanceProxy {
+  constructor(target) {
+    this.target = target;
+    this.metrics = new Map();
+  }
+
+  async execute(methodName, ...args) {
+    const startTime = Date.now();
+    const startMemory = process.memoryUsage().heapUsed;
+
+    try {
+      const result = await this.target[methodName](...args);
+
+      this.recordMetric(methodName, {
+        duration: Date.now() - startTime,
+        memoryDelta: process.memoryUsage().heapUsed - startMemory,
+        success: true
+      });
+
+      return result;
+    } catch (error) {
+      this.recordMetric(methodName, {
+        duration: Date.now() - startTime,
+        memoryDelta: process.memoryUsage().heapUsed - startMemory,
+        success: false
+      });
+
+      throw error;
+    }
+  }
+
+  recordMetric(methodName, data) {
+    if (!this.metrics.has(methodName)) {
+      this.metrics.set(methodName, {
+        calls: 0,
+        totalDuration: 0,
+        totalMemory: 0,
+        successes: 0,
+        failures: 0,
+        minDuration: Infinity,
+        maxDuration: 0
+      });
+    }
+
+    const metric = this.metrics.get(methodName);
+    metric.calls++;
+    metric.totalDuration += data.duration;
+    metric.totalMemory += data.memoryDelta;
+    metric.minDuration = Math.min(metric.minDuration, data.duration);
+    metric.maxDuration = Math.max(metric.maxDuration, data.duration);
+
+    if (data.success) {
+      metric.successes++;
+    } else {
+      metric.failures++;
+    }
+  }
+
+  getMetrics(methodName = null) {
+    if (methodName) {
+      const metric = this.metrics.get(methodName);
+      if (!metric) return null;
+
+      return {
+        ...metric,
+        avgDuration: metric.totalDuration / metric.calls,
+        avgMemory: metric.totalMemory / metric.calls,
+        successRate: (metric.successes / metric.calls * 100).toFixed(2) + '%'
+      };
+    }
+
+    const result = {};
+    for (const [name, metric] of this.metrics) {
+      result[name] = {
+        ...metric,
+        avgDuration: metric.totalDuration / metric.calls,
+        avgMemory: metric.totalMemory / metric.calls,
+        successRate: (metric.successes / metric.calls * 100).toFixed(2) + '%'
+      };
+    }
+
+    return result;
+  }
+}
+
+// ============= Real World Example - API Client with Proxies =============
+
+class APIClient {
+  async fetchData(endpoint) {
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    return {
+      endpoint,
+      data: { message: 'Data from ' + endpoint },
+      timestamp: Date.now()
+    };
+  }
+
+  async postData(endpoint, payload) {
+    await new Promise(resolve => setTimeout(resolve, 150));
+
+    return {
+      endpoint,
+      payload,
+      success: true,
+      timestamp: Date.now()
+    };
+  }
+
+  async deleteData(endpoint) {
+    await new Promise(resolve => setTimeout(resolve, 80));
+
+    return {
+      endpoint,
+      deleted: true,
+      timestamp: Date.now()
+    };
+  }
+}
+
+function createProxiedAPIClient(permissions) {
+  const client = new APIClient();
+
+  // Wrap with multiple proxies
+  const cachingProxy = new CachingProxy(client, { ttl: 5000 });
+  const protectionProxy = new ProtectionProxy(cachingProxy, permissions);
+  const loggingProxy = new LoggingProxy(protectionProxy);
+  const performanceProxy = new PerformanceProxy(loggingProxy);
+
+  return {
+    client: performanceProxy,
+    getCacheStats: () => cachingProxy.getStats(),
+    getAccessLog: () => protectionProxy.getAccessLog(),
+    getLogs: () => loggingProxy.getLogs(),
+    getMetrics: () => performanceProxy.getMetrics()
+  };
+}
+
 module.exports = {
-  RealImage,
-  ImageProxy,
-  ProtectedImageProxy,
-  CachingImageProxy,
-  LoggingImageProxy
+  Resource,
+  ExpensiveResource,
+  LazyResourceProxy,
+  CachingProxy,
+  ProtectionProxy,
+  LoggingProxy,
+  PerformanceProxy,
+  APIClient,
+  createProxiedAPIClient
 };

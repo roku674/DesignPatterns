@@ -1,97 +1,224 @@
 /**
- * Builder Pattern - Demo
- * Demonstrates building complex Pizza objects step by step
+ * Builder Pattern - Production Demo
+ * Demonstrates real HTTP request builder and SQL query builder
  */
 
-const { StandardPizzaBuilder, PizzaDirector } = require('./pizza-builder');
+const {
+  HTTPRequestBuilder,
+  SQLQueryBuilder,
+  RequestDirector,
+  QueryDirector
+} = require('./pizza-builder');
 
-console.log('=== Builder Pattern Demo ===\n');
+async function main() {
+  console.log('=== Builder Pattern - Production Implementation ===\n');
 
-// Example 1: Building pizza step by step without director
-console.log('--- Building Custom Pizza (No Director) ---');
-const builder = new StandardPizzaBuilder();
+  // Example 1: Building HTTP Requests
+  console.log('--- Example 1: Custom HTTP Request Building ---\n');
 
-const customPizza = builder
-  .setSize('Extra Large')
-  .setCrust('Stuffed crust')
-  .setSauce('BBQ')
-  .setCheese('Cheddar')
-  .addTopping('Grilled Chicken')
-  .addTopping('Bacon')
-  .addTopping('Red Onion')
-  .addTopping('Cilantro')
-  .setCookingMethod('Brick oven')
-  .build();
+  const builder = new HTTPRequestBuilder();
 
-console.log(customPizza.describe());
-console.log(`   Price: ${customPizza.getPrice()}`);
+  // Build a complex GET request
+  const getRequest = builder
+    .get('https://jsonplaceholder.typicode.com/posts')
+    .setHeader('User-Agent', 'MyApp/1.0')
+    .setHeader('Accept', 'application/json')
+    .setQueryParam('userId', '1')
+    .setQueryParam('_limit', '5')
+    .setTimeout(5000)
+    .setRetries(2)
+    .build();
 
-// Example 2: Using Director for predefined recipes
-console.log('\n--- Using Director for Predefined Pizzas ---');
+  console.log('GET Request Configuration:');
+  console.log(getRequest.describe());
 
-const director = new PizzaDirector(builder);
+  try {
+    const response = await getRequest.execute();
+    console.log(`\nResponse Status: ${response.status}`);
+    console.log(`Response Time: ${response.responseTime}ms`);
+    console.log(`Data received: ${Array.isArray(response.data) ? response.data.length : 'N/A'} items\n`);
+  } catch (error) {
+    console.error('Request failed:', error.message);
+  }
 
-console.log('\n1. Making Margherita Pizza:');
-const margherita = director.makeMargherita();
-console.log(margherita.describe());
-console.log(`   Price: ${margherita.getPrice()}`);
+  // Example 2: POST Request with Authentication
+  console.log('\n--- Example 2: Authenticated POST Request ---\n');
 
-console.log('\n2. Making Pepperoni Pizza:');
-const pepperoni = director.makePepperoni();
-console.log(pepperoni.describe());
-console.log(`   Price: ${pepperoni.getPrice()}`);
+  const postRequest = builder
+    .post('https://jsonplaceholder.typicode.com/posts')
+    .setBearerToken('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...')
+    .setBody({
+      title: 'New Post',
+      body: 'This is the content of the post',
+      userId: 1
+    })
+    .setTimeout(10000)
+    .setValidateStatus((status) => status >= 200 && status < 300)
+    .build();
 
-console.log('\n3. Making Vegetarian Pizza:');
-const vegetarian = director.makeVegetarian();
-console.log(vegetarian.describe());
-console.log(`   Price: ${vegetarian.getPrice()}`);
+  console.log('POST Request Configuration:');
+  console.log(postRequest.describe());
 
-console.log('\n4. Making Hawaiian Pizza:');
-const hawaiian = director.makeHawaiian();
-console.log(hawaiian.describe());
-console.log(`   Price: ${hawaiian.getPrice()}`);
+  try {
+    const response = await postRequest.execute();
+    console.log(`\nResponse Status: ${response.status}`);
+    console.log(`Created item:`, response.data);
+  } catch (error) {
+    console.error('Request failed:', error.message);
+  }
 
-// Example 3: Building multiple pizzas in sequence
-console.log('\n--- Building Multiple Custom Pizzas ---');
+  // Example 3: Using Request Director
+  console.log('\n\n--- Example 3: Using Request Director ---\n');
 
-const pizza1 = builder
-  .setSize('Small')
-  .setCrust('Thin')
-  .setSauce('White sauce')
-  .setCheese('Parmesan')
-  .addTopping('Spinach')
-  .addTopping('Garlic')
-  .setCookingMethod('Wood-fired oven')
-  .build();
+  const director = new RequestDirector(builder);
 
-const pizza2 = builder
-  .setSize('Medium')
-  .setCrust('Gluten-free')
-  .setSauce('Pesto')
-  .setCheese('Vegan cheese')
-  .addTopping('Artichokes')
-  .addTopping('Sun-dried tomatoes')
-  .setCookingMethod('Conveyor oven')
-  .build();
+  // Create a standard JSON API request
+  const apiRequest = director.buildJSONPostRequest(
+    'https://jsonplaceholder.typicode.com/users',
+    {
+      name: 'John Doe',
+      email: 'john.doe@example.com',
+      phone: '555-1234'
+    }
+  );
 
-console.log('\nPizza 1:');
-console.log(pizza1.describe());
-console.log(`   Price: ${pizza1.getPrice()}`);
+  console.log('Director-built API Request:');
+  console.log(apiRequest.describe());
 
-console.log('\nPizza 2:');
-console.log(pizza2.describe());
-console.log(`   Price: ${pizza2.getPrice()}`);
+  try {
+    const response = await apiRequest.execute();
+    console.log(`\nUser created with ID: ${response.data.id || 'N/A'}`);
+  } catch (error) {
+    console.error('Request failed:', error.message);
+  }
 
-// Example 4: Minimal pizza (not all steps required)
-console.log('\n--- Minimal Pizza Configuration ---');
+  // Example 4: SQL Query Builder
+  console.log('\n\n--- Example 4: SQL Query Building ---\n');
 
-const minimalPizza = builder
-  .setSize('Small')
-  .setCrust('Regular')
-  .setSauce('Tomato')
-  .setCheese('Mozzarella')
-  .setCookingMethod('Regular oven')
-  .build(); // No toppings!
+  const queryBuilder = new SQLQueryBuilder();
 
-console.log(minimalPizza.describe());
-console.log(`   Price: ${minimalPizza.getPrice()}`);
+  // Build a complex SELECT query
+  const selectQuery = queryBuilder
+    .select('users.id', 'users.name', 'orders.order_date', 'orders.total')
+    .from('users')
+    .join('orders', 'users.id = orders.user_id')
+    .where('users.active = ?', true)
+    .and('orders.total > ?', 100)
+    .orderBy('orders.order_date', 'DESC')
+    .limit(10)
+    .build();
+
+  console.log('Complex SELECT Query:');
+  console.log(selectQuery.toString());
+  console.log('Parameters:', selectQuery.getParameters());
+
+  // Build an INSERT query
+  const insertQuery = queryBuilder
+    .insert()
+    .into('users')
+    .values({
+      name: 'Alice Smith',
+      email: 'alice@example.com',
+      age: 28,
+      created_at: 'NOW()'
+    })
+    .build();
+
+  console.log('\nINSERT Query:');
+  console.log(insertQuery.toString());
+  console.log('Parameters:', insertQuery.getParameters());
+
+  // Build an UPDATE query
+  const updateQuery = queryBuilder
+    .update()
+    .from('users')
+    .set({
+      last_login: 'NOW()',
+      login_count: 'login_count + 1'
+    })
+    .where('id = ?', 123)
+    .build();
+
+  console.log('\nUPDATE Query:');
+  console.log(updateQuery.toString());
+  console.log('Parameters:', updateQuery.getParameters());
+
+  // Build a DELETE query
+  const deleteQuery = queryBuilder
+    .delete()
+    .from('sessions')
+    .where('expires_at < ?', 'NOW()')
+    .build();
+
+  console.log('\nDELETE Query:');
+  console.log(deleteQuery.toString());
+
+  // Example 5: Using Query Director
+  console.log('\n\n--- Example 5: Using Query Director ---\n');
+
+  const queryDirector = new QueryDirector(queryBuilder);
+
+  // Build a paginated query
+  const paginatedQuery = queryDirector.buildPaginatedQuery('products', 2, 20);
+  console.log('Paginated Query (Page 2, 20 per page):');
+  console.log(paginatedQuery.toString());
+
+  // Build a search query
+  const searchQuery = queryDirector.buildSearchQuery('articles', 'title', 'javascript', 15);
+  console.log('\nSearch Query:');
+  console.log(searchQuery.toString());
+
+  // Build a join query
+  const joinQuery = queryDirector.buildJoinQuery(
+    'customers',
+    'orders',
+    'customers.id = orders.customer_id',
+    ['customers.name', 'customers.email', 'orders.total']
+  );
+  console.log('\nJoin Query:');
+  console.log(joinQuery.toString());
+
+  // Build an aggregate query
+  const aggregateQuery = queryDirector.buildAggregateQuery('sales', 'category', 'product_id');
+  console.log('\nAggregate Query:');
+  console.log(aggregateQuery.toString());
+
+  // Example 6: Builder Pattern Benefits
+  console.log('\n\n--- Example 6: Pattern Benefits ---\n');
+
+  console.log('Benefits of Builder Pattern:');
+  console.log('  1. Complex Object Construction: Step-by-step construction of complex objects');
+  console.log('  2. Fluent Interface: Readable, chainable method calls');
+  console.log('  3. Immutability: Build once, use many times');
+  console.log('  4. Validation: Validate each step during construction');
+  console.log('  5. Reusability: Builder can be reused to create multiple objects');
+  console.log('  6. Director Support: Predefined construction patterns via directors');
+
+  // Example 7: Multiple Objects from Same Builder
+  console.log('\n\n--- Example 7: Reusing Builder ---\n');
+
+  console.log('Creating multiple requests with the same builder:\n');
+
+  const requests = [];
+  for (let i = 1; i <= 3; i++) {
+    const req = builder
+      .get(`https://jsonplaceholder.typicode.com/posts/${i}`)
+      .setHeader('Accept', 'application/json')
+      .setTimeout(5000)
+      .build();
+
+    requests.push(req);
+    console.log(`Request ${i}: GET ${req.url}`);
+  }
+
+  console.log(`\nTotal requests built: ${requests.length}`);
+
+  console.log('\n=== Demo Complete ===');
+}
+
+// Run the demo
+if (require.main === module) {
+  main().catch(console.error);
+}
+
+module.exports = { main };

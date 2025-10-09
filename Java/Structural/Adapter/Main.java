@@ -1,57 +1,62 @@
+import java.util.Map;
+
 /**
- * Main class to demonstrate the Adapter pattern
+ * Main class to demonstrate the Adapter pattern with real HTTP API calls
  */
 public class Main {
 
     public static void main(String[] args) {
-        System.out.println("=== Adapter Pattern Demo ===\n");
+        System.out.println("=== Adapter Pattern Demo - Real API Client ===\n");
 
         AudioPlayer audioPlayer = new AudioPlayer();
 
-        System.out.println("--- Playing Different Audio Formats ---\n");
+        System.out.println("--- Fetching Data from Different API Formats ---\n");
 
-        // Play MP3 (built-in support)
-        audioPlayer.play("mp3", "song.mp3");
+        // Example 1: JSON API (native support)
+        try {
+            System.out.println("1. Fetching JSON data (native):");
+            Map<String, Object> jsonResult = audioPlayer.fetchData("https://api.github.com/users/github");
+            System.out.println("   Format: " + jsonResult.get("format"));
+            System.out.println("   Data length: " + jsonResult.get("data").toString().length() + " characters");
+            System.out.println("   Success!\n");
+        } catch (Exception e) {
+            System.out.println("   Error: " + e.getMessage() + "\n");
+        }
 
-        System.out.println();
+        // Example 2: XML API (through adapter)
+        try {
+            System.out.println("2. Fetching XML data (via adapter):");
+            Map<String, Object> xmlResult = audioPlayer.fetchData("https://www.w3schools.com/xml/simple.xml");
+            System.out.println("   Format: " + xmlResult.get("format"));
+            System.out.println("   Parsed data: " + xmlResult.get("data"));
+            System.out.println("   Success!\n");
+        } catch (Exception e) {
+            System.out.println("   Error: " + e.getMessage() + "\n");
+        }
 
-        // Play MP4 (through adapter)
-        audioPlayer.play("mp4", "video_audio.mp4");
-
-        System.out.println();
-
-        // Play VLC (through adapter)
-        audioPlayer.play("vlc", "movie_audio.vlc");
-
-        System.out.println();
-
-        // Try unsupported format
-        audioPlayer.play("avi", "video.avi");
-
-        System.out.println("\n" + "=".repeat(50));
-        System.out.println("\n--- Playing Multiple Files ---\n");
-
-        String[] files = {
-            "mp3:favorite_song.mp3",
-            "mp4:workout_music.mp4",
-            "vlc:podcast.vlc",
-            "mp3:audiobook.mp3"
-        };
-
-        for (String file : files) {
-            String[] parts = file.split(":");
-            String format = parts[0];
-            String fileName = parts[1];
-
-            System.out.println("Attempting to play: " + fileName);
-            audioPlayer.play(format, fileName);
-            System.out.println();
+        // Example 3: CSV API (through adapter)
+        try {
+            System.out.println("3. Fetching CSV data (via adapter):");
+            Map<String, Object> csvResult = audioPlayer.fetchData("https://example.com/data.csv");
+            System.out.println("   Format: " + csvResult.get("format"));
+            if (csvResult.containsKey("headers")) {
+                String[] headers = (String[]) csvResult.get("headers");
+                System.out.println("   Headers: " + String.join(", ", headers));
+            }
+            System.out.println("   Success!\n");
+        } catch (Exception e) {
+            System.out.println("   Error: " + e.getMessage() + "\n");
         }
 
         System.out.println("=".repeat(50));
         System.out.println("\nAdapter Pattern Benefits:");
-        System.out.println("- AudioPlayer can play formats it doesn't natively support");
-        System.out.println("- New formats can be added without modifying AudioPlayer");
-        System.out.println("- Incompatible interfaces work together seamlessly");
+        System.out.println("- Unified interface for different API response formats");
+        System.out.println("- Converts XML/CSV to standard Map format");
+        System.out.println("- New formats can be added without modifying client code");
+        System.out.println("- Legacy APIs work with modern codebases");
+        System.out.println("\nReal-world usage:");
+        System.out.println("- API gateway converting multiple backend formats");
+        System.out.println("- Database adapter for different SQL dialects");
+        System.out.println("- Payment processor integrations");
     }
 }
