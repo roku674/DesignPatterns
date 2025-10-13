@@ -11,8 +11,17 @@ public class Program
     {
         Console.WriteLine("=== ActiveObject Pattern Demo ===\n");
 
-        IActiveObject pattern = new ActiveObjectImplementation();
-        pattern.Execute();
+        ActiveObjectImplementation pattern = new ActiveObjectImplementation();
+
+        try
+        {
+            pattern.Execute();
+        }
+        finally
+        {
+            // Clean up the scheduler thread
+            pattern.Shutdown();
+        }
 
         Console.WriteLine("\n=== Demo Complete ===");
     }
