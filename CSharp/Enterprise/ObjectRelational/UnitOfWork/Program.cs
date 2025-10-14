@@ -1,19 +1,10 @@
+// See UnitOfWork.cs for the complete implementation
+// This file is kept for backward compatibility
+// Run: dotnet run
+
 using System;
 
-namespace Enterprise.ObjectRelational.UnitOfWork;
-
-/// <summary>
-/// Demonstrates the UnitOfWork pattern.
-/// </summary>
-public class Program
+namespace Enterprise.ObjectRelational.UnitOfWork
 {
-    public static void Main(string[] args)
-    {
-        Console.WriteLine("=== UnitOfWork Pattern Demo ===\n");
-
-        IUnitOfWork pattern = new UnitOfWorkImplementation();
-        pattern.Execute();
-
-        Console.WriteLine("\n=== Demo Complete ===");
-    }
+    // Main entry point is in UnitOfWork.cs
 }
