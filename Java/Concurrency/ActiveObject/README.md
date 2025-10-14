@@ -1,47 +1,22 @@
-# ActiveObject Pattern
+# Active Object Pattern
 
 ## Intent
-Decouples method execution from invocation
+Decouple method execution from method invocation to enhance concurrency and simplify synchronized access to objects.
 
-## When to Use
-- When you need to implement ActiveObject
-- In distributed systems requiring this pattern
-- For improving system architecture
-- When specific requirements match this pattern
-- As part of larger architectural solution
+## Key Components
+- **Proxy**: Provides public interface
+- **Activation Queue**: Buffers pending requests
+- **Scheduler**: Decides execution order
+- **Method Request**: Encapsulates method calls
 
-## Implementation
-This is a simplified demonstration of the ActiveObject pattern. In production:
-- Add proper error handling
-- Implement complete business logic
-- Add logging and monitoring
-- Include unit tests
-- Add documentation
+## Benefits
+- Asynchronous method execution
+- Simplified synchronization
+- Better throughput
+- Decoupled invocation from execution
 
-## Compile and Run
-```bash
-# Compile
-javac Concurrency/ActiveObject/*.java
-
-# Run
-java Concurrency.ActiveObject.Main
-```
-
-## Example Output
-```
-=== ActiveObject Pattern Demo ===
-
-Executing ActiveObject pattern...
-Pattern logic executed successfully
-
-Pattern demonstration complete.
-```
-
-## Related Patterns
-- See other Concurrency patterns
-- Consider combining with complementary patterns
-
-## References
-- Enterprise Integration Patterns
-- Cloud Design Patterns
-- Microservices Patterns
+## Use Cases
+- GUI event handling
+- Network services
+- Database access objects
+- Long-running operations

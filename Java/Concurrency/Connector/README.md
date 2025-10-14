@@ -1,47 +1,21 @@
 # Connector Pattern
 
 ## Intent
-Decouples active connection establishment from service processing
+Decouple active connection establishment from service initialization in distributed systems.
 
-## When to Use
-- When you need to implement Connector
-- In distributed systems requiring this pattern
-- For improving system architecture
-- When specific requirements match this pattern
-- As part of larger architectural solution
+## Components
+- **Connector**: Initiates connections
+- **Connection Handler**: Handles established connections
+- **Error Handler**: Manages connection failures
 
-## Implementation
-This is a simplified demonstration of the Connector pattern. In production:
-- Add proper error handling
-- Implement complete business logic
-- Add logging and monitoring
-- Include unit tests
-- Add documentation
+## Benefits
+- Asynchronous connection establishment
+- Retry logic support
+- Error handling
+- Resource management
 
-## Compile and Run
-```bash
-# Compile
-javac Concurrency/Connector/*.java
-
-# Run
-java Concurrency.Connector.Main
-```
-
-## Example Output
-```
-=== Connector Pattern Demo ===
-
-Executing Connector pattern...
-Pattern logic executed successfully
-
-Pattern demonstration complete.
-```
-
-## Related Patterns
-- See other Concurrency patterns
-- Consider combining with complementary patterns
-
-## References
-- Enterprise Integration Patterns
-- Cloud Design Patterns
-- Microservices Patterns
+## Use Cases
+- Client applications
+- Service discovery
+- Load balancing
+- Connection pooling

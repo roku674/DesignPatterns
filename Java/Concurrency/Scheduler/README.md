@@ -1,47 +1,22 @@
 # Scheduler Pattern
 
 ## Intent
-Manages the execution order of operations
+Control the order in which threads execute based on scheduling criteria like priority or fairness.
 
-## When to Use
-- When you need to implement Scheduler
-- In distributed systems requiring this pattern
-- For improving system architecture
-- When specific requirements match this pattern
-- As part of larger architectural solution
+## Key Features
+- Priority-based scheduling
+- Time-based scheduling
+- Custom scheduling policies
+- Fair queuing
 
-## Implementation
-This is a simplified demonstration of the Scheduler pattern. In production:
-- Add proper error handling
-- Implement complete business logic
-- Add logging and monitoring
-- Include unit tests
-- Add documentation
+## Benefits
+- Controlled execution order
+- Priority management
+- Resource allocation control
+- Performance optimization
 
-## Compile and Run
-```bash
-# Compile
-javac Concurrency/Scheduler/*.java
-
-# Run
-java Concurrency.Scheduler.Main
-```
-
-## Example Output
-```
-=== Scheduler Pattern Demo ===
-
-Executing Scheduler pattern...
-Pattern logic executed successfully
-
-Pattern demonstration complete.
-```
-
-## Related Patterns
-- See other Concurrency patterns
-- Consider combining with complementary patterns
-
-## References
-- Enterprise Integration Patterns
-- Cloud Design Patterns
-- Microservices Patterns
+## Use Cases
+- Task scheduling
+- Job queues
+- Thread pools
+- Real-time systems

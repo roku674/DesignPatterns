@@ -1,47 +1,22 @@
-# StrategyPattern Pattern
+# Strategy Pattern (Concurrency)
 
 ## Intent
-Enables runtime selection of algorithm
+Define family of locking strategies and make them interchangeable for different synchronization needs.
 
-## When to Use
-- When you need to implement StrategyPattern
-- In distributed systems requiring this pattern
-- For improving system architecture
-- When specific requirements match this pattern
-- As part of larger architectural solution
+## Strategies Shown
+- ReentrantLock
+- ReadWriteLock
+- Synchronized blocks
+- Custom strategies
 
-## Implementation
-This is a simplified demonstration of the StrategyPattern pattern. In production:
-- Add proper error handling
-- Implement complete business logic
-- Add logging and monitoring
-- Include unit tests
-- Add documentation
+## Benefits
+- Flexible locking choice
+- Easy strategy swap
+- Testing support
+- Performance tuning
 
-## Compile and Run
-```bash
-# Compile
-javac Concurrency/StrategyPattern/*.java
-
-# Run
-java Concurrency.StrategyPattern.Main
-```
-
-## Example Output
-```
-=== StrategyPattern Pattern Demo ===
-
-Executing StrategyPattern pattern...
-Pattern logic executed successfully
-
-Pattern demonstration complete.
-```
-
-## Related Patterns
-- See other Concurrency patterns
-- Consider combining with complementary patterns
-
-## References
-- Enterprise Integration Patterns
-- Cloud Design Patterns
-- Microservices Patterns
+## Use Cases
+- Configurable synchronization
+- Performance benchmarking
+- Multi-strategy systems
+- Testing different locks

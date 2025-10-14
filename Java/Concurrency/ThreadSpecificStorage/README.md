@@ -1,47 +1,22 @@
-# ThreadSpecificStorage Pattern
+# Thread-Specific Storage Pattern
 
 ## Intent
-Maintains thread-specific object storage
+Provide thread-local storage where each thread has its own independent copy of a variable.
 
-## When to Use
-- When you need to implement ThreadSpecificStorage
-- In distributed systems requiring this pattern
-- For improving system architecture
-- When specific requirements match this pattern
-- As part of larger architectural solution
+## Problem
+Global variables are shared across threads, but sometimes each thread needs its own instance.
 
-## Implementation
-This is a simplified demonstration of the ThreadSpecificStorage pattern. In production:
-- Add proper error handling
-- Implement complete business logic
-- Add logging and monitoring
-- Include unit tests
-- Add documentation
+## Solution
+Use ThreadLocal variables that maintain separate values per thread.
 
-## Compile and Run
-```bash
-# Compile
-javac Concurrency/ThreadSpecificStorage/*.java
+## Benefits
+- Thread isolation
+- No synchronization needed
+- Simple API
+- Automatic lifecycle management
 
-# Run
-java Concurrency.ThreadSpecificStorage.Main
-```
-
-## Example Output
-```
-=== ThreadSpecificStorage Pattern Demo ===
-
-Executing ThreadSpecificStorage pattern...
-Pattern logic executed successfully
-
-Pattern demonstration complete.
-```
-
-## Related Patterns
-- See other Concurrency patterns
-- Consider combining with complementary patterns
-
-## References
-- Enterprise Integration Patterns
-- Cloud Design Patterns
-- Microservices Patterns
+## Use Cases
+- User contexts
+- Transaction management
+- Request scoping
+- Database connections per thread

@@ -1,47 +1,21 @@
-# DoubleCheckedLocking Pattern
+# Double-Checked Locking Pattern
 
 ## Intent
-Reduces synchronization overhead of acquiring locks
+Reduce the overhead of acquiring a lock by first testing the locking criterion without actually acquiring the lock, and only acquiring the lock if the check indicates locking is required.
 
-## When to Use
-- When you need to implement DoubleCheckedLocking
-- In distributed systems requiring this pattern
-- For improving system architecture
-- When specific requirements match this pattern
-- As part of larger architectural solution
+## Problem
+Lazy initialization of singletons requires synchronization to be thread-safe, but synchronizing every getInstance() call is expensive.
 
-## Implementation
-This is a simplified demonstration of the DoubleCheckedLocking pattern. In production:
-- Add proper error handling
-- Implement complete business logic
-- Add logging and monitoring
-- Include unit tests
-- Add documentation
+## Solution
+Check if initialization is required twice: once without locking (fast path) and once with locking (slow path). Use volatile to ensure visibility.
 
-## Compile and Run
-```bash
-# Compile
-javac Concurrency/DoubleCheckedLocking/*.java
+## Key Points
+- volatile keyword prevents instruction reordering
+- First check avoids synchronization overhead
+- Second check ensures thread safety
+- Only synchronizes during initialization
 
-# Run
-java Concurrency.DoubleCheckedLocking.Main
-```
-
-## Example Output
-```
-=== DoubleCheckedLocking Pattern Demo ===
-
-Executing DoubleCheckedLocking pattern...
-Pattern logic executed successfully
-
-Pattern demonstration complete.
-```
-
-## Related Patterns
-- See other Concurrency patterns
-- Consider combining with complementary patterns
-
-## References
-- Enterprise Integration Patterns
-- Cloud Design Patterns
-- Microservices Patterns
+## Use Cases
+- Lazy singleton initialization
+- Resource initialization
+- Cache initialization

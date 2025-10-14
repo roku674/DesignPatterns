@@ -1,47 +1,32 @@
-# MonitorObject Pattern
+# Monitor Object Pattern
 
 ## Intent
-Synchronizes concurrent method execution with one monitor lock
+Synchronizes concurrent method execution to ensure that only one method at a time runs within an object, while allowing threads to cooperatively schedule their access using condition variables.
 
-## When to Use
-- When you need to implement MonitorObject
-- In distributed systems requiring this pattern
-- For improving system architecture
-- When specific requirements match this pattern
-- As part of larger architectural solution
+## Problem
+When multiple threads access shared state, race conditions and data corruption can occur. Simple locking prevents concurrent access but doesn't enable thread cooperation based on conditions.
 
-## Implementation
-This is a simplified demonstration of the MonitorObject pattern. In production:
-- Add proper error handling
-- Implement complete business logic
-- Add logging and monitoring
-- Include unit tests
-- Add documentation
+## Solution
+Use synchronized methods to ensure mutual exclusion and wait/notify mechanisms to enable threads to cooperatively schedule access based on object state conditions.
 
-## Compile and Run
-```bash
-# Compile
-javac Concurrency/MonitorObject/*.java
+## Key Components
+- **Monitor Lock**: Ensures only one thread executes synchronized methods
+- **Condition Variables**: Enable threads to wait for state changes (wait/notify)
+- **Synchronized Methods**: Protect shared state access
 
-# Run
-java Concurrency.MonitorObject.Main
-```
+## Real-World Applications
+- Producer-Consumer buffers
+- Thread-safe collections
+- Resource pools
+- Event queues
 
-## Example Output
-```
-=== MonitorObject Pattern Demo ===
+## Benefits
+- Thread-safe access to shared state
+- Cooperative thread scheduling
+- Simple synchronization model
+- Built into Java language
 
-Executing MonitorObject pattern...
-Pattern logic executed successfully
-
-Pattern demonstration complete.
-```
-
-## Related Patterns
-- See other Concurrency patterns
-- Consider combining with complementary patterns
-
-## References
-- Enterprise Integration Patterns
-- Cloud Design Patterns
-- Microservices Patterns
+## Tradeoffs
+- Can cause contention under high load
+- Risk of deadlock if not careful
+- notify/notifyAll can be inefficient

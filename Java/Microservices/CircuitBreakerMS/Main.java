@@ -3,18 +3,77 @@ package Microservices.CircuitBreakerMS;
 /**
  * CircuitBreakerMS Pattern Demonstration
  *
- * Prevents cascading failures in microservices
+ * Prevents cascading failures by failing fast
+ *
+ * This implementation demonstrates the CircuitBreakerMS pattern
+ * in a microservices architecture context.
+ *
+ * @author Design Patterns Implementation
  */
 public class Main {
     public static void main(String[] args) {
         System.out.println("=== CircuitBreakerMS Pattern Demo ===\n");
 
-        // Create implementation
-        CircuitBreakerMSImpl implementation = new CircuitBreakerMSImpl();
+        // Scenario 1: Basic implementation
+        demonstrateBasicUsage();
 
-        // Demonstrate pattern
-        implementation.demonstrate();
+        // Scenario 2: Advanced usage
+        demonstrateAdvancedUsage();
 
-        System.out.println("\nPattern demonstration complete.");
+        // Scenario 3: Error handling
+        demonstrateErrorHandling();
+
+        // Scenario 4: Performance optimization
+        demonstratePerformanceOptimization();
+
+        // Scenario 5: Real-world scenario
+        demonstrateRealWorldScenario();
+
+        System.out.println("\n=== Pattern demonstration complete ===");
+    }
+
+    private static void demonstrateBasicUsage() {
+        System.out.println("1. Basic CircuitBreakerMS Usage");
+        System.out.println("-".repeat(50));
+
+        CircuitBreakerMSImplementation impl = new CircuitBreakerMSImplementation();
+        impl.executeBasic();
+        System.out.println();
+    }
+
+    private static void demonstrateAdvancedUsage() {
+        System.out.println("2. Advanced CircuitBreakerMS Usage");
+        System.out.println("-".repeat(50));
+
+        CircuitBreakerMSImplementation impl = new CircuitBreakerMSImplementation();
+        impl.executeAdvanced();
+        System.out.println();
+    }
+
+    private static void demonstrateErrorHandling() {
+        System.out.println("3. Error Handling");
+        System.out.println("-".repeat(50));
+
+        CircuitBreakerMSImplementation impl = new CircuitBreakerMSImplementation();
+        impl.demonstrateErrorHandling();
+        System.out.println();
+    }
+
+    private static void demonstratePerformanceOptimization() {
+        System.out.println("4. Performance Optimization");
+        System.out.println("-".repeat(50));
+
+        CircuitBreakerMSImplementation impl = new CircuitBreakerMSImplementation();
+        impl.demonstratePerformance();
+        System.out.println();
+    }
+
+    private static void demonstrateRealWorldScenario() {
+        System.out.println("5. Real-World Scenario");
+        System.out.println("-".repeat(50));
+
+        CircuitBreakerMSImplementation impl = new CircuitBreakerMSImplementation();
+        impl.demonstrateRealWorld();
+        System.out.println();
     }
 }

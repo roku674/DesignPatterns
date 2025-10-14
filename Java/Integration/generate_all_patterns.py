@@ -97,6 +97,26 @@ PATTERNS = {
         "description": "Central communication backbone for enterprise integration",
         "scenarios": ["Enterprise service bus", "Microservice communication", "Event distribution", "Service mesh"]
     },
+    "MessageBroker": {
+        "category": "Message Routing",
+        "description": "Decouples destination of message from sender",
+        "scenarios": ["Central message routing", "Topic-based messaging", "Multi-protocol support", "Message transformation"]
+    },
+    "MessageRouter": {
+        "category": "Message Routing",
+        "description": "Routes messages to different destinations based on conditions",
+        "scenarios": ["Conditional routing", "Multi-destination routing", "Filter-based routing", "Priority routing"]
+    },
+    "MessageFilter": {
+        "category": "Message Routing",
+        "description": "Filters out unwanted messages from a channel",
+        "scenarios": ["Spam filtering", "Priority filtering", "Content filtering", "Type filtering"]
+    },
+    "PriorityChannel": {
+        "category": "Message Channels",
+        "description": "Delivers higher priority messages before lower priority ones",
+        "scenarios": ["Urgent order processing", "Critical alerts", "VIP customer requests", "Emergency notifications"]
+    },
 }
 
 def generate_pattern_implementation(pattern_name, pattern_info, base_path):

@@ -3,18 +3,77 @@ package Microservices.TransactionLogTailing;
 /**
  * TransactionLogTailing Pattern Demonstration
  *
- * Publishes changes by tailing transaction log
+ * Publishes database changes by tailing transaction log
+ *
+ * This implementation demonstrates the TransactionLogTailing pattern
+ * in a microservices architecture context.
+ *
+ * @author Design Patterns Implementation
  */
 public class Main {
     public static void main(String[] args) {
         System.out.println("=== TransactionLogTailing Pattern Demo ===\n");
 
-        // Create implementation
-        TransactionLogTailingImpl implementation = new TransactionLogTailingImpl();
+        // Scenario 1: Basic implementation
+        demonstrateBasicUsage();
 
-        // Demonstrate pattern
-        implementation.demonstrate();
+        // Scenario 2: Advanced usage
+        demonstrateAdvancedUsage();
 
-        System.out.println("\nPattern demonstration complete.");
+        // Scenario 3: Error handling
+        demonstrateErrorHandling();
+
+        // Scenario 4: Performance optimization
+        demonstratePerformanceOptimization();
+
+        // Scenario 5: Real-world scenario
+        demonstrateRealWorldScenario();
+
+        System.out.println("\n=== Pattern demonstration complete ===");
+    }
+
+    private static void demonstrateBasicUsage() {
+        System.out.println("1. Basic TransactionLogTailing Usage");
+        System.out.println("-".repeat(50));
+
+        TransactionLogTailingImplementation impl = new TransactionLogTailingImplementation();
+        impl.executeBasic();
+        System.out.println();
+    }
+
+    private static void demonstrateAdvancedUsage() {
+        System.out.println("2. Advanced TransactionLogTailing Usage");
+        System.out.println("-".repeat(50));
+
+        TransactionLogTailingImplementation impl = new TransactionLogTailingImplementation();
+        impl.executeAdvanced();
+        System.out.println();
+    }
+
+    private static void demonstrateErrorHandling() {
+        System.out.println("3. Error Handling");
+        System.out.println("-".repeat(50));
+
+        TransactionLogTailingImplementation impl = new TransactionLogTailingImplementation();
+        impl.demonstrateErrorHandling();
+        System.out.println();
+    }
+
+    private static void demonstratePerformanceOptimization() {
+        System.out.println("4. Performance Optimization");
+        System.out.println("-".repeat(50));
+
+        TransactionLogTailingImplementation impl = new TransactionLogTailingImplementation();
+        impl.demonstratePerformance();
+        System.out.println();
+    }
+
+    private static void demonstrateRealWorldScenario() {
+        System.out.println("5. Real-World Scenario");
+        System.out.println("-".repeat(50));
+
+        TransactionLogTailingImplementation impl = new TransactionLogTailingImplementation();
+        impl.demonstrateRealWorld();
+        System.out.println();
     }
 }

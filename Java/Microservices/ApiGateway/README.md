@@ -1,47 +1,41 @@
 # ApiGateway Pattern
 
-## Intent
-Single entry point for all client requests
+## Overview
+Routes client requests to appropriate microservices, handles cross-cutting concerns
 
-## When to Use
-- When you need to implement ApiGateway
-- In distributed systems requiring this pattern
-- For improving system architecture
-- When specific requirements match this pattern
-- As part of larger architectural solution
+## Problem
+In microservices architecture, ApiGateway addresses specific challenges related to distributed systems.
 
-## Implementation
-This is a simplified demonstration of the ApiGateway pattern. In production:
-- Add proper error handling
-- Implement complete business logic
-- Add logging and monitoring
-- Include unit tests
-- Add documentation
+## Solution
+The ApiGateway pattern provides a structured approach to solving these challenges.
 
-## Compile and Run
+## Key Components
+- **Core Component**: Main implementation logic
+- **Service Layer**: Handles service interactions
+- **Error Handler**: Manages failures gracefully
+- **Monitor**: Tracks performance and health
+
+## Benefits
+- Improved scalability
+- Better fault tolerance
+- Enhanced maintainability
+- Clear separation of concerns
+
+## Use Cases
+1. E-commerce platforms
+2. Financial services
+3. Healthcare systems
+4. IoT applications
+
+## Running the Example
 ```bash
-# Compile
-javac Microservices/ApiGateway/*.java
-
-# Run
+cd /home/roku674/Alex/DesignPatterns/Java/Microservices/ApiGateway
+javac -d . *.java
 java Microservices.ApiGateway.Main
 ```
 
-## Example Output
-```
-=== ApiGateway Pattern Demo ===
-
-Executing ApiGateway pattern...
-Pattern logic executed successfully
-
-Pattern demonstration complete.
-```
-
 ## Related Patterns
-- See other Microservices patterns
-- Consider combining with complementary patterns
-
-## References
-- Enterprise Integration Patterns
-- Cloud Design Patterns
-- Microservices Patterns
+- Service Discovery
+- API Gateway
+- Circuit Breaker
+- Saga Pattern

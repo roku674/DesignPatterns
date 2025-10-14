@@ -170,4 +170,4 @@ public class Main {
     private static void printInfo(String message) {
         System.out.println("  ℹ " + message);
     }
-}}
+}

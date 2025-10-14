@@ -1,47 +1,22 @@
-# ReadWriteLock Pattern
+# Read-Write Lock Pattern
 
 ## Intent
-Allows concurrent read access while preserving exclusive write
+Allow multiple concurrent readers OR a single writer, improving performance when reads greatly outnumber writes.
 
-## When to Use
-- When you need to implement ReadWriteLock
-- In distributed systems requiring this pattern
-- For improving system architecture
-- When specific requirements match this pattern
-- As part of larger architectural solution
+## Problem
+Using exclusive locks for both reads and writes is inefficient when most operations are reads that don't modify state.
 
-## Implementation
-This is a simplified demonstration of the ReadWriteLock pattern. In production:
-- Add proper error handling
-- Implement complete business logic
-- Add logging and monitoring
-- Include unit tests
-- Add documentation
+## Solution
+Use ReadWriteLock which maintains two locks: one for reading (shared) and one for writing (exclusive). Multiple threads can hold the read lock, but only one can hold the write lock, and not while any read locks are held.
 
-## Compile and Run
-```bash
-# Compile
-javac Concurrency/ReadWriteLock/*.java
+## Benefits
+- Better performance for read-heavy workloads
+- Multiple readers can execute concurrently
+- Writers get exclusive access
+- Prevents reader starvation
 
-# Run
-java Concurrency.ReadWriteLock.Main
-```
-
-## Example Output
-```
-=== ReadWriteLock Pattern Demo ===
-
-Executing ReadWriteLock pattern...
-Pattern logic executed successfully
-
-Pattern demonstration complete.
-```
-
-## Related Patterns
-- See other Concurrency patterns
-- Consider combining with complementary patterns
-
-## References
-- Enterprise Integration Patterns
-- Cloud Design Patterns
-- Microservices Patterns
+## Use Cases
+- Caches
+- Configuration data
+- Read-heavy data structures
+- Immutable data with occasional updates

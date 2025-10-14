@@ -1,47 +1,16 @@
-# ProactorPattern Pattern
+# Proactor Pattern (Alternative Implementation)
 
 ## Intent
-Handles asynchronous operations without blocking
+Handle asynchronous operations by allowing applications to initiate operations and receive completion notifications.
 
-## When to Use
-- When you need to implement ProactorPattern
-- In distributed systems requiring this pattern
-- For improving system architecture
-- When specific requirements match this pattern
-- As part of larger architectural solution
+## Flow
+1. Application initiates async operation
+2. Operation executes in background
+3. Completion handler notified when done
+4. Handler processes result
 
-## Implementation
-This is a simplified demonstration of the ProactorPattern pattern. In production:
-- Add proper error handling
-- Implement complete business logic
-- Add logging and monitoring
-- Include unit tests
-- Add documentation
-
-## Compile and Run
-```bash
-# Compile
-javac Concurrency/ProactorPattern/*.java
-
-# Run
-java Concurrency.ProactorPattern.Main
-```
-
-## Example Output
-```
-=== ProactorPattern Pattern Demo ===
-
-Executing ProactorPattern pattern...
-Pattern logic executed successfully
-
-Pattern demonstration complete.
-```
-
-## Related Patterns
-- See other Concurrency patterns
-- Consider combining with complementary patterns
-
-## References
-- Enterprise Integration Patterns
-- Cloud Design Patterns
-- Microservices Patterns
+## Benefits
+- Non-blocking I/O
+- High scalability
+- Efficient resource use
+- Event-driven architecture

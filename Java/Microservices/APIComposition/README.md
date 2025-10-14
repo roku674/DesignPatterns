@@ -1,47 +1,33 @@
-# APIComposition Pattern
+# API Composition Pattern
 
-## Intent
-Composes data from multiple services
+## Overview
+The API Composition pattern aggregates data from multiple microservices to serve a single client request.
 
-## When to Use
-- When you need to implement APIComposition
-- In distributed systems requiring this pattern
-- For improving system architecture
-- When specific requirements match this pattern
-- As part of larger architectural solution
+## Problem
+Data is distributed across multiple services. Single client request needs data from multiple sources.
 
-## Implementation
-This is a simplified demonstration of the APIComposition pattern. In production:
-- Add proper error handling
-- Implement complete business logic
-- Add logging and monitoring
-- Include unit tests
-- Add documentation
+## Solution
+API Composer orchestrates calls to multiple services and aggregates responses into unified format.
 
-## Compile and Run
+## Components
+- API Composer: Orchestrates service calls
+- Service Clients: Communicate with microservices
+- Response Aggregator: Combines responses
+- Fallback Handler: Provides resilience
+
+## Benefits
+- Reduced client complexity
+- Lower network latency with parallel calls
+- Separation of concerns
+
+## Use Cases
+- E-commerce product pages
+- User dashboards
+- Order summaries
+
+## Running
 ```bash
-# Compile
-javac Microservices/APIComposition/*.java
-
-# Run
+cd /home/roku674/Alex/DesignPatterns/Java/Microservices/APIComposition
+javac -d . *.java
 java Microservices.APIComposition.Main
 ```
-
-## Example Output
-```
-=== APIComposition Pattern Demo ===
-
-Executing APIComposition pattern...
-Pattern logic executed successfully
-
-Pattern demonstration complete.
-```
-
-## Related Patterns
-- See other Microservices patterns
-- Consider combining with complementary patterns
-
-## References
-- Enterprise Integration Patterns
-- Cloud Design Patterns
-- Microservices Patterns

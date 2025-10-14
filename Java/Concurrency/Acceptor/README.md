@@ -1,47 +1,21 @@
 # Acceptor Pattern
 
 ## Intent
-Decouples passive connection establishment from service processing
+Decouple passive connection establishment from service processing in network applications.
 
-## When to Use
-- When you need to implement Acceptor
-- In distributed systems requiring this pattern
-- For improving system architecture
-- When specific requirements match this pattern
-- As part of larger architectural solution
+## Components
+- **Acceptor**: Listens for connections
+- **Service Handler**: Processes accepted connections
+- **Connection Queue**: Buffers incoming connections
 
-## Implementation
-This is a simplified demonstration of the Acceptor pattern. In production:
-- Add proper error handling
-- Implement complete business logic
-- Add logging and monitoring
-- Include unit tests
-- Add documentation
+## Benefits
+- Decoupled connection handling
+- Scalable architecture
+- Flexible handler management
+- Thread pool integration
 
-## Compile and Run
-```bash
-# Compile
-javac Concurrency/Acceptor/*.java
-
-# Run
-java Concurrency.Acceptor.Main
-```
-
-## Example Output
-```
-=== Acceptor Pattern Demo ===
-
-Executing Acceptor pattern...
-Pattern logic executed successfully
-
-Pattern demonstration complete.
-```
-
-## Related Patterns
-- See other Concurrency patterns
-- Consider combining with complementary patterns
-
-## References
-- Enterprise Integration Patterns
-- Cloud Design Patterns
-- Microservices Patterns
+## Use Cases
+- Web servers
+- Network services
+- Socket programming
+- Connection pooling
