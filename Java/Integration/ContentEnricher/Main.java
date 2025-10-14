@@ -1,20 +1,173 @@
 package Integration.ContentEnricher;
 
+import java.util.*;
+import java.time.Instant;
+import java.util.concurrent.*;
+
 /**
- * ContentEnricher Pattern Demonstration
+ * ContentEnricher Pattern - Enterprise Integration Pattern
  *
- * Adds missing information to messages
+ * Category: Message Transformation
+ *
+ * Intent:
+ * Adds missing data to a message by accessing external data sources
+ *
+ * Key Concepts:
+ * - Enriches incomplete messages
+ * - Queries external systems
+ * - Adds contextual information
+ * - Maintains message flow
+ *
+ * When to Use:
+ * - You need to implement adds missing data to a message by accessing external data sources
+ * - You want to decouple system components
+ * - You require reliable message processing
+ * - You need to scale message handling
+ * - You want to maintain system flexibility
+ *
+ * Benefits:
+ * - Loose coupling between components
+ * - Scalable message processing
+ * - Flexible system architecture
+ * - Maintainable integration code
+ * - Testable components
+ *
+ * Real-World Scenarios:
+ * 1. Customer enrichment: Add customer details to order
+ * 2. Product enrichment: Add product details to cart
+ * 3. Geo enrichment: Add location data to IP address
+ * 4. Price enrichment: Add current price to product
+ * 5. Status enrichment: Add real-time status
+ *
+ * Reference: https://www.enterpriseintegrationpatterns.com
+ *
+ * @author Enterprise Integration Patterns
+ * @version 1.0
  */
 public class Main {
+
+    private static final String PATTERN_NAME = "ContentEnricher";
+    private static int scenarioCounter = 0;
+
     public static void main(String[] args) {
-        System.out.println("=== ContentEnricher Pattern Demo ===\n");
+        System.out.println("╔" + "═".repeat(70) + "╗");
+        System.out.println("║  " + PATTERN_NAME + " Pattern Demonstration" + " ".repeat(70 - PATTERN_NAME.length() - 32) + "║");
+        System.out.println("║  Category: Message Transformation" + " ".repeat(70 - 13 - len(category)) + "║");
+        System.out.println("╚" + "═".repeat(70) + "╝");
+        System.out.println();
 
-        // Create implementation
-        ContentEnricherImpl implementation = new ContentEnricherImpl();
+        // Pattern description
+        System.out.println("Description:");
+        System.out.println("  Adds missing data to a message by accessing external data sources");
+        System.out.println();
 
-        // Demonstrate pattern
-        implementation.demonstrate();
+        // Initialize the pattern
+        System.out.println("Initializing ContentEnricher infrastructure...");
+        ContentEnricherImplementation implementation = new ContentEnricherImplementation();
+        System.out.println("  ✓ Infrastructure initialized");
+        System.out.println();
 
-        System.out.println("\nPattern demonstration complete.");
+        // Scenario 1: Customer enrichment
+        demonstrateScenario("Customer enrichment", "Add customer details to order", implementation);
+
+        // Scenario 2: Product enrichment
+        demonstrateScenario("Product enrichment", "Add product details to cart", implementation);
+
+        // Scenario 3: Geo enrichment
+        demonstrateScenario("Geo enrichment", "Add location data to IP address", implementation);
+
+        // Scenario 4: Price enrichment
+        demonstrateScenario("Price enrichment", "Add current price to product", implementation);
+
+        // Scenario 5: Status enrichment
+        demonstrateScenario("Status enrichment", "Add real-time status", implementation);
+
+        // Summary
+        printSummary();
+
+        System.out.println();
+        System.out.println("╔" + "═".repeat(70) + "╗");
+        System.out.println("║  Pattern Demonstration Complete" + " ".repeat(70 - 34) + "║");
+        System.out.println("╚" + "═".repeat(70) + "╝");
     }
-}
+
+    /**
+     * Demonstrates a specific scenario.
+     */
+    private static void demonstrateScenario(
+            String scenarioName,
+            String scenarioDescription,
+            ContentEnricherImplementation implementation) {
+
+        scenarioCounter++;
+        System.out.println("─".repeat(72));
+        System.out.println("Scenario " + scenarioCounter + ": " + scenarioName);
+        System.out.println("─".repeat(72));
+        System.out.println("Description: " + scenarioDescription);
+        System.out.println();
+
+        try {
+            // Execute scenario
+            long startTime = System.currentTimeMillis();
+
+            implementation.processScenario(scenarioName, scenarioDescription);
+
+            long endTime = System.currentTimeMillis();
+            long duration = endTime - startTime;
+
+            System.out.println();
+            System.out.println("  ✓ Scenario completed successfully in " + duration + "ms");
+            System.out.println();
+
+        } catch (Exception e) {
+            System.err.println("  ✗ Error in scenario: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Prints execution summary.
+     */
+    private static void printSummary() {
+        System.out.println("─".repeat(72));
+        System.out.println("Execution Summary");
+        System.out.println("─".repeat(72));
+        System.out.println("  Total scenarios executed: " + scenarioCounter);
+        System.out.println("  Pattern: " + PATTERN_NAME);
+        System.out.println("  Category: {category}");
+        System.out.println("  Status: All scenarios completed");
+        System.out.println("─".repeat(72));
+    }
+
+    /**
+     * Helper to simulate processing delay.
+     */
+    private static void simulateProcessing(int milliseconds) {
+        try {
+            Thread.sleep(milliseconds);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    /**
+     * Helper to print step information.
+     */
+    private static void printStep(String step) {
+        System.out.println("  → " + step);
+    }
+
+    /**
+     * Helper to print success message.
+     */
+    private static void printSuccess(String message) {
+        System.out.println("  ✓ " + message);
+    }
+
+    /**
+     * Helper to print info message.
+     */
+    private static void printInfo(String message) {
+        System.out.println("  ℹ " + message);
+    }
+}}
