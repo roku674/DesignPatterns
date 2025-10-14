@@ -4,26 +4,50 @@ public interface HealthCheck {
     String getName();
 }
 class DatabaseCheck implements HealthCheck {
+    private String name;
+    private boolean healthy;
+
+    public DatabaseCheck(String name, boolean healthy) {
+        this.name = name;
+        this.healthy = healthy;
+    }
+
     public boolean isHealthy() {
-        return true;
+        return healthy;
     }
     public String getName() {
-        return "Database";
+        return name;
     }
 }
 class CacheCheck implements HealthCheck {
+    private String name;
+    private boolean healthy;
+
+    public CacheCheck(String name, boolean healthy) {
+        this.name = name;
+        this.healthy = healthy;
+    }
+
     public boolean isHealthy() {
-        return true;
+        return healthy;
     }
     public String getName() {
-        return "Cache";
+        return name;
     }
 }
 class ExternalAPICheck implements HealthCheck {
+    private String name;
+    private boolean healthy;
+
+    public ExternalAPICheck(String name, boolean healthy) {
+        this.name = name;
+        this.healthy = healthy;
+    }
+
     public boolean isHealthy() {
-        return Math.random() > 0.3;
+        return healthy;
     }
     public String getName() {
-        return "External API";
+        return name;
     }
 }
