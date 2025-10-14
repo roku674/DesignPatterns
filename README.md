@@ -166,6 +166,14 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - The Gang of Four (Erich Gamma, Richard Helm, Ralph Johnson, John Vlissides) for documenting these timeless patterns
 - The open-source community for continuous learning and knowledge sharing
 
+## 💖 Support This Project
+
+If you find this repository helpful and would like to support continued development, please consider donating:
+
+**[Visit my website to donate](https://www.alexanderfields.me)**
+
+Your support helps maintain and expand this educational resource!
+
 ---
 
 **Found this helpful? Give it a ⭐️ to show your support!**
