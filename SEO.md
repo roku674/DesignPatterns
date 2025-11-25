@@ -1037,8 +1037,247 @@ Page speed is a ranking factor:
 - Leverage browser caching
 - Use CDN for static assets
 - Optimize images and fonts
-- Minimize render-blocking resources
+- Minimize render-blocking resources (see detailed section below)
 - Use server-side rendering (SSR) or static generation (SSG)
+
+---
+
+## Render-Blocking Resources
+
+### What Are Render-Blocking Resources?
+
+Render-blocking resources are CSS and JavaScript files that prevent a page from rendering until they are fully loaded and parsed. These block the browser's main thread and delay:
+- **LCP (Largest Contentful Paint)** - When the largest content element appears
+- **FCP (First Contentful Paint)** - When the first content appears
+
+### Common Render-Blocking Issues
+
+From PageSpeed Insights reports, typical render-blocking issues include:
+```
+Render blocking requests Est savings of 1,000 ms
+Requests are blocking the page's initial render, which may delay LCP.
+
+URL                                          Transfer Size    Duration
+alexanderfields.me (1st party)               23.4 KiB         2,060 ms
+…chunks/fddecf8e3317ec8f.css                 18.4 KiB         1,030 ms
+…chunks/539b10c03fc75780.css                 2.5 KiB          770 ms
+…chunks/6a865ebc1dbf5378.css                 2.5 KiB          260 ms
+```
+
+### Project-Specific Audit Results
+
+#### Layout-Level CSS (layout.js)
+The root layout imports 3 CSS files synchronously:
+```javascript
+import "@/styles/index.css";    // ~678 lines - Base styles
+import "@/styles/globals.css";  // ~227 lines - Tailwind + animations
+import "@/styles/table.css";    // Table styles
+```
+
+**Issue**: All CSS must load before any content renders.
+
+#### Material UI (MUI) Heavy Pages
+
+Pages using MUI components load significant JavaScript bundles that block rendering:
+
+| Page | MUI Components Used | Severity |
+|------|---------------------|----------|
+| `/bots` | Container, Typography, Box, Grid | Medium |
+| `/bots/alexander` | Container, Typography, Box, Grid, Paper | Medium |
+| `/bots/trading` | Container, Typography, Box, DataGrid | **High** |
+| `/contact` | Container, Typography, Box, Grid, Button, Link | Medium |
+| `/personality` | Container, Typography, Box, Grid, Slider, IconButton, TextField, Button, Alert + Chart.js | **Critical** |
+| `/projects` | Container, Typography, Box, Grid, Image | Medium |
+| `/services` | Container | Low |
+| `/experience` | Wrapper component only | Low |
+| `/` (home) | Container, Typography, Box + custom views | Medium |
+
+#### Client-Side Only Pages (Missing SSR)
+
+Pages marked `"use client"` without server-side rendering:
+- `/bots/trading/page.js` - DataGrid with API data
+- `/contact/page.js` - Form with hyperlinks hook
+- `/calendar/page.js` - Complex state management
+- `/dashboard/page.js` - Authentication + cards
+- `/personality/page.js` - Charts + audio
+- `/projects/page.js` - Dynamic hyperlinks
+- `/services/page.js` - Dynamic hyperlinks
+
+**Issue**: These pages require full JavaScript execution before rendering any content.
+
+#### Dynamic Imports Done Correctly
+
+These pages already use good patterns:
+- `/products/page.js` - Uses `dynamic()` import with loading state
+- `/layout.js` - StarField and MeteorFall loaded dynamically
+
+### Solutions for Render-Blocking Resources
+
+#### 1. Inline Critical CSS
+
+Extract above-the-fold CSS and inline it in the HTML `<head>`:
+
+```jsx
+// next.config.js - Enable experimental optimizeCss
+module.exports = {
+  experimental: {
+    optimizeCss: true,  // Requires critters package
+  },
+}
+```
+
+Or manually inline critical styles:
+```jsx
+// layout.js
+<head>
+  <style dangerouslySetInnerHTML={{__html: `
+    body { background: #030014; color: white; margin: 0; }
+    /* Critical above-the-fold styles */
+  `}} />
+</head>
+```
+
+#### 2. Lazy Load Non-Critical CSS
+
+For CSS needed only on specific pages:
+```jsx
+// Dynamic CSS import
+import dynamic from 'next/dynamic';
+
+const ChartComponent = dynamic(() => import('@/components/Chart'), {
+  loading: () => <div className="chart-placeholder" />,
+});
+```
+
+#### 3. Reduce MUI Bundle Size
+
+**Option A: Use specific imports**
+```jsx
+// ❌ BAD - Imports entire MUI library
+import { Button, TextField, Box } from '@mui/material';
+
+// ✅ GOOD - Tree-shakeable imports
+import Button from '@mui/material/Button';
+import TextField from '@mui/material/TextField';
+import Box from '@mui/material/Box';
+```
+
+**Option B: Replace MUI with Tailwind equivalents**
+```jsx
+// ❌ MUI Container (requires JavaScript)
+import { Container } from '@mui/material';
+<Container maxWidth="lg">...</Container>
+
+// ✅ Tailwind (CSS only, no JS)
+<div className="container mx-auto max-w-6xl px-4">...</div>
+```
+
+#### 4. Add `loading="lazy"` to Heavy Components
+
+```jsx
+const DataGrid = dynamic(
+  () => import('@mui/x-data-grid').then(mod => mod.DataGrid),
+  {
+    ssr: false,
+    loading: () => <div className="h-96 animate-pulse bg-gray-800" />
+  }
+);
+```
+
+#### 5. Defer Non-Critical JavaScript
+
+Use Next.js Script component with strategy:
+```jsx
+import Script from 'next/script';
+
+// Load after page is interactive
+<Script src="/analytics.js" strategy="afterInteractive" />
+
+// Load when browser is idle
+<Script src="/non-critical.js" strategy="lazyOnload" />
+```
+
+#### 6. Preload Critical Resources
+
+```jsx
+// layout.js
+<head>
+  <link
+    rel="preload"
+    href="/_next/static/css/critical.css"
+    as="style"
+  />
+  <link
+    rel="preload"
+    href="/fonts/roboto.woff2"
+    as="font"
+    type="font/woff2"
+    crossOrigin="anonymous"
+  />
+</head>
+```
+
+### Network Dependency Chain
+
+**Issue**: Avoid chaining critical requests.
+
+```
+Document → CSS chunk 1 → CSS chunk 2 → CSS chunk 3 → Render
+         ↳ JS chunk 1 → JS chunk 2 → Render
+```
+
+**Solution**: Flatten the chain by:
+1. Inlining critical CSS
+2. Preloading critical resources
+3. Reducing total CSS/JS files
+4. Using HTTP/2 for parallel loading
+
+### Pages Requiring Immediate Attention
+
+**Critical Priority (blocking > 1000ms):**
+1. `/personality` - Heavy MUI + Chart.js + audio loading
+2. `/bots/trading` - DataGrid loads massive bundle
+3. `/calendar` - Large client-side state management
+
+**High Priority (blocking 500-1000ms):**
+1. `/dashboard/*` - All dashboard pages use Heroicons + client state
+2. `/contact` - MUI form components
+3. `/` (home) - Multiple MUI components + views
+
+**Medium Priority (blocking 250-500ms):**
+1. `/bots` - MUI grid layout
+2. `/projects` - MUI + Image
+3. `/services` - MUI container
+
+### Recommended Fixes Summary
+
+| Fix | Impact | Effort | Pages Affected |
+|-----|--------|--------|----------------|
+| Replace MUI Container with Tailwind | High | Low | All pages |
+| Dynamic import Chart.js | High | Low | personality |
+| Dynamic import DataGrid | High | Low | bots/trading |
+| Inline critical CSS | Medium | Medium | All pages |
+| Specific MUI imports | Medium | Medium | All MUI pages |
+| Convert client to server components | High | High | Most pages |
+
+### Testing Render-Blocking Resources
+
+1. **PageSpeed Insights**: https://pagespeed.web.dev/
+2. **WebPageTest**: https://www.webpagetest.org/
+3. **Chrome DevTools > Performance > Coverage**
+4. **Chrome DevTools > Network > Disable cache + Slow 3G**
+
+### Monitoring
+
+Add these checks to CI/CD:
+```bash
+# Using lighthouse CLI
+npx lighthouse https://www.alexanderfields.me --only-categories=performance
+
+# Check for render-blocking resources
+npx lighthouse https://www.alexanderfields.me --output=json | \
+  jq '.audits["render-blocking-resources"]'
+```
 
 ### 6. Mobile Optimization
 
