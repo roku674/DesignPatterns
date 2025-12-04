@@ -402,7 +402,7 @@ The patterns cover critical cloud computing concepts including resilience, scala
 
 ---
 
-*Implementation completed by Claude Code on 2025-10-13*
+*Implementation completed on 2025-10-13*
 *Total patterns: 51*
 *Total Java files: 156*
 *Total lines of code: ~4,390*
