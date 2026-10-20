@@ -1,0 +1,34 @@
+version: 2
+updates:
+  - package-ecosystem: "nuget"
+    directories: ["/CSharp/**/*"]
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 20
+    target-branch: "develop"
+    reviewers:
+      - "roku674"
+    groups:
+      minor-and-patch:
+        update-types:
+          - minor
+          - patch
+      major:
+        update-types:
+          - major
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 20
+    target-branch: "develop"
+    reviewers:
+      - "roku674"
+    groups:
+      minor-and-patch:
+        update-types:
+          - minor
+          - patch
+      major:
+        update-types:
+          - major
