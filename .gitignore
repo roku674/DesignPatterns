@@ -61,7 +61,7 @@ __pycache__/
 *.pyc
 
 # Claude global/project instruction files (local only)
-CLAUDE*
+CLAUDE.local.md
 
 # Claude-generated artifacts (local only)
 docs/superpowers/
