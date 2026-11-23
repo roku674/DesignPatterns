@@ -1,3 +1,10 @@
+function requireOption(source, name) {
+  if (source === undefined || source === null || source[name] === undefined || source[name] === null) {
+    throw new Error(`Missing required option '${name}'`);
+  }
+  return source[name];
+}
+
 /**
  * ClaimCheckCloud Pattern
  *
@@ -215,7 +222,7 @@ class ClaimCheckCloud {
   constructor(config = {}) {
     this.config = {
       threshold: config.threshold || 1024,
-      queueName: config.queueName || 'default-queue',
+      queueName: requireOption(config, 'queueName'),
       enableAutoCleanup: config.enableAutoCleanup !== false,
       ...config
     };

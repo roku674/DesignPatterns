@@ -431,6 +431,7 @@ class APIGateway {
             res.end(JSON.stringify(response));
 
         } catch (error) {
+          console.error('[Warning] APIGateway.routeRequest: caught error while handling the operation:', error);
             // Record failure
             this.circuitBreaker.recordFailure(route.serviceName);
 

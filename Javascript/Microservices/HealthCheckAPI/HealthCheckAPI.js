@@ -90,6 +90,7 @@ class DependencyMonitor {
             };
 
         } catch (error) {
+          console.error('[Warning] HealthCheckAPI.checkDependency: caught error while handling the operation:', error);
             dep.consecutiveFailures++;
             dep.lastStatus = dep.consecutiveFailures >= 3 ? HealthStatus.DOWN : HealthStatus.DEGRADED;
             dep.lastCheck = Date.now();
@@ -206,6 +207,7 @@ class HealthChecker {
             try {
                 customCheckResults[name] = await checkFn();
             } catch (error) {
+              console.error('[Warning] HealthCheckAPI.performDetailedCheck: caught error while handling the operation:', error);
                 customCheckResults[name] = { status: 'FAILED', error: error.message };
             }
         }
@@ -289,6 +291,7 @@ class HealthCheckAPI {
             res.end(JSON.stringify(result, null, 2));
 
         } catch (error) {
+          console.error('[Warning] HealthCheckAPI.handleRequest: caught error while handling the operation:', error);
             res.writeHead(500, {
                 'Content-Type': 'application/json',
                 'X-Correlation-ID': correlationId

@@ -23,6 +23,13 @@
 const http = require('http');
 const url = require('url');
 
+function requireOption(source, name) {
+  if (source === undefined || source === null || source[name] === undefined || source[name] === null) {
+    throw new Error(`Missing required option '${name}'`);
+  }
+  return source[name];
+}
+
 function generateUUID() {
     return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
         const r = Math.random() * 16 | 0;
@@ -89,6 +96,7 @@ class HealthMonitor {
             instance.healthy = healthy;
             callback(instance.id, healthy);
         } catch (error) {
+          console.error('[Warning] ServerSideDiscovery.performHealthCheck: caught error while handling the operation:', error);
             instance.healthy = false;
             callback(instance.id, false);
         }
@@ -167,7 +175,7 @@ class LoadBalancerRouter {
         this.port = options.port || 8080;
         this.registry = new Map();
         this.healthMonitor = new HealthMonitor(options.healthCheckInterval || 10000);
-        this.router = new RequestRouter(options.routingStrategy || 'round-robin');
+        this.router = new RequestRouter(requireOption(options, 'routingStrategy'));
         this.server = null;
     }
 
@@ -292,6 +300,7 @@ class LoadBalancerRouter {
             });
             res.end(JSON.stringify(result));
         } catch (error) {
+          console.error('[Warning] ServerSideDiscovery.pathParts: caught error while handling the operation:', error);
             res.writeHead(503, {
                 'Content-Type': 'application/json',
                 'X-Correlation-ID': correlationId

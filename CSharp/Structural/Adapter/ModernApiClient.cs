@@ -31,8 +31,9 @@ public class ModernApiClient
             response.EnsureSuccessStatusCode();
             return await response.Content.ReadFromJsonAsync<ApiUserResponse>();
         }
-        catch (HttpRequestException)
+        catch (HttpRequestException ex)
         {
+            Console.Error.WriteLine($"[Warning] ModernApiClient.GetUserByIdAsync: caught {ex.GetType().Name} while handling the operation: {ex}");
             return null;
         }
     }
@@ -47,10 +48,11 @@ public class ModernApiClient
             HttpResponseMessage response = await _httpClient.GetAsync($"{_baseUrl}/users");
             response.EnsureSuccessStatusCode();
             List<ApiUserResponse>? users = await response.Content.ReadFromJsonAsync<List<ApiUserResponse>>();
-            return users ?? new List<ApiUserResponse>();
+            return users ?? throw new InvalidOperationException("The users endpoint returned an empty response body");
         }
-        catch (HttpRequestException)
+        catch (HttpRequestException ex)
         {
+            Console.Error.WriteLine($"[Warning] ModernApiClient.GetAllUsersAsync: caught {ex.GetType().Name} while handling the operation: {ex}");
             return new List<ApiUserResponse>();
         }
     }
@@ -66,8 +68,9 @@ public class ModernApiClient
             response.EnsureSuccessStatusCode();
             return await response.Content.ReadFromJsonAsync<ApiUserResponse>();
         }
-        catch (HttpRequestException)
+        catch (HttpRequestException ex)
         {
+            Console.Error.WriteLine($"[Warning] ModernApiClient.CreateUserAsync: caught {ex.GetType().Name} while handling the operation: {ex}");
             return null;
         }
     }
@@ -82,8 +85,9 @@ public class ModernApiClient
             HttpResponseMessage response = await _httpClient.DeleteAsync($"{_baseUrl}/users/{id}");
             return response.IsSuccessStatusCode;
         }
-        catch (HttpRequestException)
+        catch (HttpRequestException ex)
         {
+            Console.Error.WriteLine($"[Warning] ModernApiClient.DeleteUserAsync: caught {ex.GetType().Name} while handling the operation: {ex}");
             return false;
         }
     }

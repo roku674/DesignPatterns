@@ -79,6 +79,7 @@ class ServiceClient {
                             data: parsed
                         });
                     } catch (error) {
+                      console.error('[Warning] APIComposition.req: caught error while handling the operation:', error);
                         resolve({
                             statusCode: res.statusCode,
                             headers: res.headers,

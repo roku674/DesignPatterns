@@ -230,7 +230,7 @@ namespace DesignPatterns.Behavioral.Command
 
         public MacroCommand(string description)
         {
-            _description = description ?? "Macro Command";
+            _description = description ?? throw new ArgumentNullException(nameof(description));
             _commands = new List<ICommand>();
         }
 

@@ -16,6 +16,13 @@
 const EventEmitter = require('events');
 const crypto = require('crypto');
 
+function requireOption(source, name) {
+  if (source === undefined || source === null || source[name] === undefined || source[name] === null) {
+    throw new Error(`Missing required option '${name}'`);
+  }
+  return source[name];
+}
+
 /**
  * Service registry for microservices discovery
  */
@@ -537,7 +544,7 @@ class CircuitBreaker {
 class CQRSMS {
   constructor(config = {}) {
     this.config = config;
-    this.serviceName = config.serviceName || 'cqrs-service';
+    this.serviceName = requireOption(config, 'serviceName');
 
     this.serviceRegistry = new ServiceRegistry();
     this.eventBus = new DistributedEventBus();

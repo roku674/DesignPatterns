@@ -21,6 +21,13 @@
 // EXTERNAL LEGACY SYSTEM (Simulated)
 // ============================================================================
 
+function lookupMapping(mapping, key, description) {
+  if (!Object.prototype.hasOwnProperty.call(mapping, key)) {
+    throw new Error(`No mapping defined for ${description}: ${key}`);
+  }
+  return mapping[key];
+}
+
 class LegacyInventorySystem {
   constructor() {
     this.items = new Map([
@@ -194,7 +201,7 @@ class LegacySystemAdapter {
       'INSUFFICIENT': 'InsufficientStockError'
     };
 
-    const errorType = errorMap[legacyResult.error_cd] || 'UnknownError';
+    const errorType = lookupMapping(errorMap, legacyResult.error_cd, 'legacy error code');
     const error = new Error(legacyResult.error_msg);
     error.name = errorType;
     return error;
@@ -207,7 +214,7 @@ class LegacySystemAdapter {
       'restock': 'ADD',
       'return': 'ADD'
     };
-    return typeMap[operation] || 'SUB';
+    return lookupMapping(typeMap, operation, 'inventory operation');
   }
 }
 

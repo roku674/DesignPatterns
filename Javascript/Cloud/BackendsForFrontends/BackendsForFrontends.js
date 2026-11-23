@@ -15,6 +15,13 @@
 
 const EventEmitter = require('events');
 
+function requireOption(source, name) {
+  if (source === undefined || source === null || source[name] === undefined || source[name] === null) {
+    throw new Error(`Missing required option '${name}'`);
+  }
+  return source[name];
+}
+
 /**
  * Client Profile for different frontend types
  */
@@ -31,7 +38,7 @@ class ClientProfile {
   }
 
   getOptimalDataFormat() {
-    return this.preferences.dataFormat || 'json';
+    return requireOption(this.preferences, 'dataFormat');
   }
 
   getMaxPayloadSize() {
@@ -184,6 +191,7 @@ class ServiceAggregator {
           data: result
         };
       } catch (error) {
+        console.error('[Warning] BackendsForFrontends.promises: caught error while handling the operation:', error);
         return {
           service: request.service,
           success: false,

@@ -100,6 +100,7 @@ class AsyncOperationProcessor extends EventEmitter {
       operation.complete(result);
       this.emit('completion', new CompletionEvent(operation, result));
     } catch (error) {
+      console.error('[Warning] ProactorPattern.processOperation: caught error while handling the operation:', error);
       operation.fail(error);
       this.emit('completion', new CompletionEvent(operation, null));
     } finally {

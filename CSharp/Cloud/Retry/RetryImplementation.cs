@@ -166,7 +166,7 @@ public class RetryPolicy<T> : IRetryPolicy<T>
     public RetryPolicy(
         int maxRetries,
         IRetryStrategy strategy,
-        Func<Exception, bool> shouldRetry = null)
+        Func<Exception, bool> shouldRetry)
     {
         if (maxRetries <= 0)
         {
@@ -174,8 +174,8 @@ public class RetryPolicy<T> : IRetryPolicy<T>
         }
 
         _maxRetries = maxRetries;
-        _strategy = strategy ?? new FixedIntervalRetryStrategy(TimeSpan.FromSeconds(1));
-        _shouldRetry = shouldRetry ?? (ex => true); // Retry all exceptions by default
+        _strategy = strategy ?? throw new ArgumentNullException(nameof(strategy));
+        _shouldRetry = shouldRetry ?? throw new ArgumentNullException(nameof(shouldRetry));
     }
 
     public async Task<T> ExecuteAsync(Func<Task<T>> operation)
@@ -234,13 +234,13 @@ public class AdvancedRetryPolicy<T>
         int maxRetries,
         IRetryStrategy strategy,
         TimeSpan timeout,
-        Func<Exception, bool> shouldRetry = null,
+        Func<Exception, bool> shouldRetry,
         Action<int, Exception> onRetry = null)
     {
         _maxRetries = maxRetries;
         _strategy = strategy;
         _timeout = timeout;
-        _shouldRetry = shouldRetry ?? (ex => true);
+        _shouldRetry = shouldRetry ?? throw new ArgumentNullException(nameof(shouldRetry));
         _onRetry = onRetry;
     }
 
@@ -411,6 +411,11 @@ public class RetryPolicyBuilder<T>
             _strategy = new ExponentialBackoffRetryStrategy(
                 TimeSpan.FromSeconds(1),
                 TimeSpan.FromSeconds(30));
+        }
+
+        if (_shouldRetry == null)
+        {
+            throw new InvalidOperationException("Call HandleException or HandleExceptionWhen before Build so the retry condition is explicit");
         }
 
         return new AdvancedRetryPolicy<T>(

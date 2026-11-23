@@ -147,7 +147,10 @@ public class Program
             {
                 await circuitBreaker.ExecuteAsync(() => service.CallServiceAsync());
             }
-            catch { }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"[Warning] Program.Main: expected service failure while tripping the circuit breaker: {ex}");
+            }
         }
 
         Console.WriteLine($"Circuit State: {circuitBreaker.State}\n");
@@ -190,7 +193,10 @@ public class Program
             {
                 await circuitBreaker.ExecuteAsync(() => service.CallServiceAsync());
             }
-            catch { }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"[Warning] Program.Main: expected service failure while tripping the circuit breaker: {ex}");
+            }
         }
 
         Console.WriteLine($"Circuit State: {circuitBreaker.State}");

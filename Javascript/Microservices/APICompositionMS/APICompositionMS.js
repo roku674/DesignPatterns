@@ -169,6 +169,7 @@ class APICompositionMS {
             res.end(JSON.stringify(response));
 
         } catch (error) {
+          console.error('[Warning] APICompositionMS.handleRequest: caught error while handling the operation:', error);
             const errorResponse = this.errorHandler.handle(error, correlationId);
             
             res.writeHead(500, {

@@ -66,9 +66,9 @@ public class CircuitBreaker
     public int FailureCount => failureCount;
     public int SuccessCount => successCount;
 
-    public CircuitBreaker(CircuitBreakerConfig config = null)
+    public CircuitBreaker(CircuitBreakerConfig config)
     {
-        this.config = config ?? new CircuitBreakerConfig();
+        this.config = config ?? throw new ArgumentNullException(nameof(config));
         state = CircuitState.Closed;
         failureCount = 0;
         successCount = 0;
@@ -380,10 +380,10 @@ public class CircuitBreakerPool
     private Dictionary<string, CircuitBreaker> breakers;
     private CircuitBreakerConfig defaultConfig;
 
-    public CircuitBreakerPool(CircuitBreakerConfig config = null)
+    public CircuitBreakerPool(CircuitBreakerConfig config)
     {
         breakers = new Dictionary<string, CircuitBreaker>();
-        defaultConfig = config ?? new CircuitBreakerConfig();
+        defaultConfig = config ?? throw new ArgumentNullException(nameof(config));
     }
 
     /// <summary>

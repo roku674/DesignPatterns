@@ -97,8 +97,9 @@ public class Program
                     $"Request{i + 1}"
                 );
             }
-            catch
+            catch (Exception ex)
             {
+                Console.Error.WriteLine($"[Warning] Program.async: caught {ex.GetType().Name} while handling the operation: {ex}");
                 // Ignore failures for demonstration
             }
         }
@@ -123,8 +124,9 @@ public class Program
                     $"Request{i + 1}"
                 );
             }
-            catch
+            catch (Exception ex)
             {
+                Console.Error.WriteLine($"[Warning] Program.async: caught {ex.GetType().Name} while handling the operation: {ex}");
                 // Ignore failures
             }
         }
@@ -346,8 +348,9 @@ public class Program
                 );
                 success = true;
             }
-            catch
+            catch (Exception ex)
             {
+                Console.Error.WriteLine($"[Warning] Program.async: caught {ex.GetType().Name} while handling the operation: {ex}");
                 // Record failure
             }
 

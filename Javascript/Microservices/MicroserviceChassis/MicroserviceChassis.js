@@ -17,6 +17,13 @@
 
 const EventEmitter = require('events');
 
+function requireOption(source, name) {
+  if (source === undefined || source === null || source[name] === undefined || source[name] === null) {
+    throw new Error(`Missing required option '${name}'`);
+  }
+  return source[name];
+}
+
 /**
  * Health Check
  */
@@ -52,6 +59,7 @@ class HealthCheck {
         details: result.details || {}
       };
     } catch (error) {
+      console.error('[Warning] MicroserviceChassis.timeoutPromise: caught error while handling the operation:', error);
       this.lastStatus = 'unhealthy';
       this.lastError = error.message;
 
@@ -160,7 +168,7 @@ class MetricsCollector {
 class Logger {
   constructor(serviceName, options = {}) {
     this.serviceName = serviceName;
-    this.level = options.level || 'INFO';
+    this.level = requireOption(options, 'level');
     this.levels = { DEBUG: 0, INFO: 1, WARN: 2, ERROR: 3 };
     this.outputs = options.outputs || [console];
   }
@@ -245,7 +253,7 @@ class MicroserviceChassis extends EventEmitter {
   constructor(serviceName, options = {}) {
     super();
     this.serviceName = serviceName;
-    this.version = options.version || '1.0.0';
+    this.version = requireOption(options, 'version');
     this.port = options.port || 3000;
 
     // Core components

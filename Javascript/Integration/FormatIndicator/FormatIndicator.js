@@ -43,7 +43,8 @@ class FormatIndicator extends EventEmitter {
             return true;
           }
           return typeof data === 'object';
-        } catch {
+        } catch (error) {
+          console.error('[Warning] FormatIndicator.registerDefaultFormats: caught error while handling the operation:', error);
           return false;
         }
       },
@@ -54,6 +55,7 @@ class FormatIndicator extends EventEmitter {
           }
           return true;
         } catch (error) {
+          console.error('[Warning] FormatIndicator.registerDefaultFormats: caught error while handling the operation:', error);
           return { valid: false, error: error.message };
         }
       },
@@ -187,6 +189,7 @@ class FormatIndicator extends EventEmitter {
           return formatName;
         }
       } catch (error) {
+        console.error('[Warning] FormatIndicator.detectFormat: caught error while handling the operation:', error);
         this.emit('detectionError', { formatName, error: error.message });
       }
     }
@@ -219,6 +222,7 @@ class FormatIndicator extends EventEmitter {
       this.emit('validationFailed', { format, result });
       return result;
     } catch (error) {
+      console.error('[Warning] FormatIndicator.validateFormat: caught error while handling the operation:', error);
       this.statistics.validationFailures++;
       this.emit('validationError', { format, error: error.message });
       return { valid: false, error: error.message };
@@ -353,6 +357,7 @@ class FormatIndicator extends EventEmitter {
         const processed = this.processMessage(message, options);
         results.processed.push(processed);
       } catch (error) {
+        console.error('[Warning] FormatIndicator.processBatch: caught error while handling the operation:', error);
         results.failed.push({
           message,
           error: error.message

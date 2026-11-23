@@ -110,6 +110,7 @@ class RequestAggregator extends EventEmitter {
           error: null
         });
       } catch (error) {
+        console.error('[Warning] GatewayAggregation.executeSequential: caught error while handling the operation:', error);
         results.push({
           service: request.service,
           status: 'rejected',

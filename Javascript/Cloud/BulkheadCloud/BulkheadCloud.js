@@ -333,6 +333,7 @@ class HealthMonitor {
           message: result === true ? 'OK' : result
         });
       } catch (error) {
+        console.error('[Warning] BulkheadCloud.runHealthChecks: caught error while handling the operation:', error);
         results.push({
           name: check.name,
           status: 'error',
@@ -769,7 +770,9 @@ async function scenario5_AutoScalingHints() {
   };
 
   for (let i = 0; i < 30; i++) {
-    bulkhead.execute(task).catch(() => {});
+    bulkhead.execute(task).catch(error => {
+      console.error('[Warning] BulkheadCloud.demo: task rejected:', error);
+    });
 
     if (i % 5 === 0) {
       const state = bulkhead.getState();

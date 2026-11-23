@@ -73,6 +73,7 @@ class ServiceRegistry {
 
       return isHealthy;
     } catch (error) {
+      console.error('[Warning] SagaMS.checkHealth: caught error while handling the operation:', error);
       this.healthChecks.set(serviceName, {
         healthy: false,
         lastCheck: new Date(),
@@ -352,6 +353,7 @@ class MicroserviceStep {
       await this.compensation(context, messageQueue);
       return { success: true };
     } catch (error) {
+      console.error('[Warning] SagaMS.compensate: caught error while handling the operation:', error);
       return {
         success: false,
         error: error.message

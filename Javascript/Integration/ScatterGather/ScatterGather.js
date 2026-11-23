@@ -65,6 +65,7 @@ class Recipient {
       };
 
     } catch (error) {
+      console.error('[Warning] ScatterGather.timeoutPromise: caught error while handling the operation:', error);
       const duration = Date.now() - startTime;
 
       return {

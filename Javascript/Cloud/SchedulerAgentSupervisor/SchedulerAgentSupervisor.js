@@ -85,6 +85,7 @@ class Agent {
           attempts: attempts + 1
         };
       } catch (error) {
+        console.error('[Warning] SchedulerAgentSupervisor.timeoutPromise: caught error while handling the operation:', error);
         lastError = error;
         attempts++;
 
@@ -308,6 +309,7 @@ class Scheduler {
       const result = await agent.execute(task);
       task.complete(result);
     } catch (error) {
+      console.error('[Warning] SchedulerAgentSupervisor.executeTask: caught error while handling the operation:', error);
       task.fail(error);
 
       if (task.canRetry()) {
@@ -491,6 +493,7 @@ class Supervisor {
         timestamp: Date.now()
       });
     } catch (error) {
+      console.error('[Warning] SchedulerAgentSupervisor.compensateTask: caught error while handling the operation:', error);
       this.addAlert({
         type: 'compensation_failed',
         taskId: task.id,

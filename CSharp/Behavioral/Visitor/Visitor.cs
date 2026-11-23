@@ -41,8 +41,8 @@ namespace DesignPatterns.Behavioral.Visitor
             Name = name ?? throw new ArgumentNullException(nameof(name));
             Path = path ?? throw new ArgumentNullException(nameof(path));
             SizeBytes = sizeBytes;
-            Extension = extension ?? "";
-            MimeType = mimeType ?? "application/octet-stream";
+            Extension = extension ?? throw new ArgumentNullException(nameof(extension));
+            MimeType = mimeType ?? throw new ArgumentNullException(nameof(mimeType));
             CreatedDate = DateTime.UtcNow;
         }
 

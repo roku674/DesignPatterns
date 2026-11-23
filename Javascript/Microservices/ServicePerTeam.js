@@ -519,6 +519,7 @@ class ServiceGovernance {
                     });
                 }
             } catch (error) {
+              console.error('[Warning] ServicePerTeam.validateService: caught error while handling the operation:', error);
                 results.failed.push({
                     rule: ruleName,
                     reason: error.message

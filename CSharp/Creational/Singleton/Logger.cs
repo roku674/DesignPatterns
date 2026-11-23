@@ -112,8 +112,9 @@ public sealed class Logger : IDisposable
                     await _fileWriter.FlushAsync();
                 }
             }
-            catch (OperationCanceledException)
+            catch (OperationCanceledException ex)
             {
+                Console.Error.WriteLine($"[Warning] Logger.ProcessLogQueueAsync: caught {ex.GetType().Name} while handling the operation: {ex}");
                 // Expected when shutting down
                 break;
             }

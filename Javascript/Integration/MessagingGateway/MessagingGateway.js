@@ -389,6 +389,7 @@ class AsyncGateway extends MessagingGateway {
                 this.emit('async-sent', messageId);
             })
             .catch(error => {
+                console.error(`[Warning] MessagingGateway.sendAsync: message ${messageId} failed:`, error);
                 const cb = this.pendingCallbacks.get(messageId);
                 if (cb) {
                     clearTimeout(cb.timeoutId);

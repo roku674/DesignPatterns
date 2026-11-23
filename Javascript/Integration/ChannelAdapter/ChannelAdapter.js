@@ -234,6 +234,7 @@ class ChannelAdapter extends EventEmitter {
         const result = await handler.send(message, endpoint);
         return result;
       } catch (error) {
+        console.error('[Warning] ChannelAdapter.sendWithRetry: caught error while handling the operation:', error);
         lastError = error;
         this.emit('sendError', {
           attempt,
@@ -372,7 +373,8 @@ class ChannelAdapter extends EventEmitter {
     while ((match = tagRegex.exec(xml)) !== null) {
       try {
         result[match[1]] = JSON.parse(match[2]);
-      } catch {
+      } catch (error) {
+        console.error('[Warning] ChannelAdapter.xmlToJSON: caught error while handling the operation:', error);
         result[match[1]] = match[2];
       }
     }
@@ -441,6 +443,7 @@ class ChannelAdapter extends EventEmitter {
         const adapted = await this.adapt(message, sourceProtocol, targetProtocol, options);
         results.adapted.push(adapted);
       } catch (error) {
+        console.error('[Warning] ChannelAdapter.adaptBatch: caught error while handling the operation:', error);
         results.failed.push({
           message,
           error: error.message

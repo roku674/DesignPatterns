@@ -323,14 +323,20 @@ class ExecutionStrategy {
         // Parallel strategy - execute all branches simultaneously
         this.strategies.set('parallel', async (branches, context) => {
             const promises = branches.map(branch => branch.execute(context));
-            return await Promise.all(promises.map(p => p.catch(e => e)));
+            return await Promise.all(promises.map(p => p.catch(e => {
+              console.error('[Warning] BranchMS.strategy: branch execution rejected, returning the error as the branch result:', e);
+              return e;
+            })));
         });
 
         // Sequential strategy - execute branches one by one
         this.strategies.set('sequential', async (branches, context) => {
             const results = [];
             for (const branch of branches) {
-                const result = await branch.execute(context).catch(e => e);
+                const result = await branch.execute(context).catch(e => {
+                  console.error('[Warning] BranchMS.strategy: branch execution rejected, returning the error as the branch result:', e);
+                  return e;
+                });
                 results.push(result);
             }
             return results;
@@ -344,7 +350,10 @@ class ExecutionStrategy {
 
             const results = [];
             for (const branch of sorted) {
-                const result = await branch.execute(context).catch(e => e);
+                const result = await branch.execute(context).catch(e => {
+                  console.error('[Warning] BranchMS.strategy: branch execution rejected, returning the error as the branch result:', e);
+                  return e;
+                });
                 results.push(result);
             }
             return results;
@@ -359,7 +368,10 @@ class ExecutionStrategy {
             });
 
             return await Promise.all(
-                sorted.map(branch => branch.execute(context).catch(e => e))
+                sorted.map(branch => branch.execute(context).catch(e => {
+                  console.error('[Warning] BranchMS.strategy: branch execution rejected, returning the error as the branch result:', e);
+                  return e;
+                }))
             );
         });
 
@@ -378,12 +390,18 @@ class ExecutionStrategy {
             }
 
             // Execute healthy branches in parallel, unhealthy ones sequentially
-            const healthyPromises = highHealthBranches.map(b => b.execute(context).catch(e => e));
+            const healthyPromises = highHealthBranches.map(b => b.execute(context).catch(e => {
+              console.error('[Warning] BranchMS.strategy: branch execution rejected, returning the error as the branch result:', e);
+              return e;
+            }));
             const healthyResults = await Promise.all(healthyPromises);
 
             const unhealthyResults = [];
             for (const branch of lowHealthBranches) {
-                const result = await branch.execute(context).catch(e => e);
+                const result = await branch.execute(context).catch(e => {
+                  console.error('[Warning] BranchMS.strategy: branch execution rejected, returning the error as the branch result:', e);
+                  return e;
+                });
                 unhealthyResults.push(result);
             }
 
@@ -511,6 +529,7 @@ class BranchMicroservice extends EventEmitter {
                 res.end(JSON.stringify({ error: 'Not found' }));
             }
         } catch (error) {
+          console.error('[Warning] BranchMS.handleRequest: caught error while handling the operation:', error);
             this.metrics.failedRequests++;
             res.writeHead(500, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({ error: error.message }));

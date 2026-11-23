@@ -371,6 +371,7 @@ class TestMessage extends EventEmitter {
         try {
           await interceptor.handler(message, direction);
         } catch (error) {
+          console.error('[Warning] TestMessage.interceptMessage: caught error while handling the operation:', error);
           this.emit('interceptorError', { error, interceptor, message });
         }
       }

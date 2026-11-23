@@ -237,6 +237,7 @@ class PromiseUtils {
       try {
         return await fn();
       } catch (error) {
+        console.error('[Warning] Promise.onRetry: caught error while handling the operation:', error);
         lastError = error;
 
         if (attempt < maxAttempts) {

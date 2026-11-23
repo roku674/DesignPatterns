@@ -250,6 +250,7 @@ class SagaTransaction {
         const result = await step.compensate(this.context);
         this.compensatedSteps.push(step);
       } catch (error) {
+        console.error('[Warning] CompensatingTransaction.compensate: caught error while handling the operation:', error);
         compensationErrors.push({
           step: step.name,
           error: error.message
@@ -495,6 +496,7 @@ class CompensationStrategy {
             const result = await step.compensate(context);
             results.push({ step: step.name, success: true, result });
           } catch (error) {
+            console.error('[Warning] CompensatingTransaction.bestEffort: caught error while handling the operation:', error);
             results.push({ step: step.name, success: false, error: error.message });
           }
         }

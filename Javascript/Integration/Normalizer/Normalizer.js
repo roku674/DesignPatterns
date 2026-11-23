@@ -233,6 +233,7 @@ class Normalizer extends EventEmitter {
         const normalized = this.normalize(message, schema);
         results.normalized.push(normalized);
       } catch (error) {
+        console.error('[Warning] Normalizer.normalizeBatch: caught error while handling the operation:', error);
         results.failed.push({
           index,
           message,
@@ -333,7 +334,8 @@ class Normalizer extends EventEmitter {
   generateCacheKey(message, schema) {
     try {
       return JSON.stringify({ message, schema });
-    } catch {
+    } catch (error) {
+      console.error('[Warning] Normalizer.generateCacheKey: caught error while handling the operation:', error);
       return `${Date.now()}-${Math.random()}`;
     }
   }

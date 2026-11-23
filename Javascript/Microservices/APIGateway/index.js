@@ -242,7 +242,10 @@ class APIGateway extends EventEmitter {
 
       // Rate Limiting
       if (this.config.enableRateLimiting) {
-        const clientId = request.clientId || request.ip || 'anonymous';
+        const clientId = request.clientId || request.ip;
+        if (!clientId) {
+          throw new Error('Request has neither clientId nor ip to identify the caller');
+        }
         if (!this.rateLimiter.isAllowed(clientId)) {
           return this.createResponse(429, { error: 'Too Many Requests' }, startTime);
         }
@@ -329,6 +332,7 @@ class APIGateway extends EventEmitter {
         const result = await this.proxyToService(serviceName, method, params);
         return { serviceName, success: true, data: result };
       } catch (error) {
+        console.error('[Warning] index.promises: caught error while handling the operation:', error);
         return { serviceName, success: false, error: error.message };
       }
     });

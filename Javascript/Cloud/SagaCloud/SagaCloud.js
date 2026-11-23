@@ -58,6 +58,13 @@ const SagaMode = {
     MIXED: 'mixed'
 };
 
+function requireOption(source, name) {
+  if (source === undefined || source === null || source[name] === undefined || source[name] === null) {
+    throw new Error(`Missing required option '${name}'`);
+  }
+  return source[name];
+}
+
 /**
  * Individual saga step definition
  */
@@ -284,7 +291,7 @@ class SagaContext {
  */
 class SagaCloud {
     constructor(config = {}) {
-        this.name = config.name || 'UnnamedSaga';
+        this.name = requireOption(config, 'name');
         this.steps = [];
         this.mode = config.mode || SagaMode.SEQUENTIAL;
         this.state = SagaState.PENDING;
@@ -428,7 +435,10 @@ class SagaCloud {
         const promises = this.steps.map(step =>
             this.executeStepWithRetry(step)
                 .then(result => ({ step, result, success: true }))
-                .catch(error => ({ step, error, success: false }))
+                .catch(error => {
+                  console.error('[Warning] Saga: step failed, recording the failure for compensation:', step, error);
+                  return { step, error, success: false };
+                })
         );
 
         const results = await Promise.all(promises);
@@ -469,7 +479,10 @@ class SagaCloud {
                 const promises = group.map(step =>
                     this.executeStepWithRetry(step)
                         .then(result => ({ step, result, success: true }))
-                        .catch(error => ({ step, error, success: false }))
+                        .catch(error => {
+                          console.error('[Warning] Saga: step failed, recording the failure for compensation:', step, error);
+                          return { step, error, success: false };
+                        })
                 );
 
                 const results = await Promise.all(promises);

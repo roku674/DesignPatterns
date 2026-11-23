@@ -108,6 +108,7 @@ class MessageBus extends EventEmitter {
                 try {
                     await handler(message);
                 } catch (error) {
+                  console.error('[Warning] CQRSMS.subscribe: caught error while handling the operation:', error);
                     await this.handleError(message, serviceId, error);
                 }
             }

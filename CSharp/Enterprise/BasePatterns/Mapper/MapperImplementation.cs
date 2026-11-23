@@ -345,13 +345,16 @@ public class OrderMapper
         if (order == null)
             throw new ArgumentNullException(nameof(order));
 
+        Customer customer = order.Customer ?? throw new InvalidOperationException($"Order {order.Id} has no customer");
+        List<OrderItem> items = order.Items ?? throw new InvalidOperationException($"Order {order.Id} has no item list");
+
         return new OrderDto
         {
             OrderId = order.Id,
             OrderDate = order.OrderDate,
-            CustomerName = order.Customer != null ? order.Customer.GetFullName() : "Unknown",
-            CustomerEmail = order.Customer?.Email ?? "N/A",
-            ItemCount = order.Items?.Count ?? 0,
+            CustomerName = customer.GetFullName(),
+            CustomerEmail = customer.Email,
+            ItemCount = items.Count,
             TotalAmount = order.TotalAmount,
             Status = order.Status
         };

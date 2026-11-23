@@ -311,6 +311,7 @@ class FrontController {
       return response;
 
     } catch (error) {
+      console.error('[Warning] FrontController.handleRequest: caught error while handling the operation:', error);
       // Handle errors
       for (const errorHandler of this.errorHandlers) {
         const handled = await errorHandler(error, request, response);
@@ -366,6 +367,7 @@ class RESTFrontController extends FrontController {
         try {
           request.body = typeof request.body === 'string' ? JSON.parse(request.body) : request.body;
         } catch (error) {
+          console.error('[Warning] FrontController.setupCommonFilters: caught error while handling the operation:', error);
           response.setStatus(400).json({ error: 'Invalid JSON' });
           return false;
         }

@@ -106,6 +106,7 @@ class SagaStep {
       await this.compensation(context);
       return { success: true };
     } catch (error) {
+      console.error('[Warning] Saga.compensate: caught error while handling the operation:', error);
       return {
         success: false,
         error: error.message,

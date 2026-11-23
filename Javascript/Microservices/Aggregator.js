@@ -348,11 +348,14 @@ class Aggregator extends EventEmitter {
     async executeParallel(serviceRequests, timeout) {
         const promises = serviceRequests.map(request => {
             return this.executeServiceRequest(request)
-                .catch(error => ({
-                    service: request.service,
-                    success: false,
-                    error: error.message
-                }));
+                .catch(error => {
+                    console.error(`[Warning] Aggregator.executeParallel: request to ${request.service} failed:`, error);
+                    return {
+                        service: request.service,
+                        success: false,
+                        error: error.message
+                    };
+                });
         });
 
         // Wait for all requests with timeout
@@ -382,6 +385,7 @@ class Aggregator extends EventEmitter {
                 const response = await this.executeServiceRequest(request);
                 responses.push(response);
             } catch (error) {
+              console.error('[Warning] Aggregator.executeSequential: caught error while handling the operation:', error);
                 responses.push({
                     service: request.service,
                     success: false,
@@ -413,6 +417,7 @@ class Aggregator extends EventEmitter {
                 status: result.status
             };
         } catch (error) {
+          console.error('[Warning] Aggregator.executeServiceRequest: caught error while handling the operation:', error);
             return {
                 service: request.service,
                 success: false,
@@ -446,7 +451,7 @@ class Aggregator extends EventEmitter {
 class AggregatorService extends EventEmitter {
     constructor(config) {
         super();
-        this.name = config.name || 'AggregatorService';
+        this.name = config.name || 'Aggregator';
         this.port = config.port || 4000;
         this.host = config.host || 'localhost';
         this.aggregator = config.aggregator;
@@ -526,6 +531,7 @@ class AggregatorService extends EventEmitter {
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify(result));
         } catch (error) {
+          console.error('[Warning] Aggregator.handleAggregate: caught error while handling the operation:', error);
             res.writeHead(500, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({ error: error.message }));
         }

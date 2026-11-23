@@ -269,6 +269,7 @@ class RetryPattern extends EventEmitter {
                 };
 
             } catch (error) {
+              console.error('[Warning] RetryPattern.execute: caught error while handling the operation:', error);
                 lastError = error;
 
                 this.emit('error', {

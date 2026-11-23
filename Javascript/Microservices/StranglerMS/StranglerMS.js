@@ -56,6 +56,13 @@ const CircuitState = {
     HALF_OPEN: 'half_open'
 };
 
+function requireOption(source, name) {
+  if (source === undefined || source === null || source[name] === undefined || source[name] === null) {
+    throw new Error(`Missing required option '${name}'`);
+  }
+  return source[name];
+}
+
 /**
  * TraceContext - Distributed tracing context
  * @class
@@ -155,7 +162,7 @@ class CircuitBreaker extends EventEmitter {
      */
     constructor(config = {}) {
         super();
-        this.name = config.name || 'CircuitBreaker';
+        this.name = requireOption(config, 'name');
         this.failureThreshold = config.failureThreshold || 5;
         this.resetTimeout = config.resetTimeout || 60000;
         this.halfOpenRequests = config.halfOpenRequests || 3;
@@ -415,7 +422,7 @@ class TrafficRouter {
                 return this.canaryRoute(context.canaryPercentage || 0);
 
             case TrafficStrategy.BLUE_GREEN:
-                return this.blueGreenRoute(context.activeVersion || 'legacy');
+                return this.blueGreenRoute(requireOption(context, 'activeVersion'));
 
             case TrafficStrategy.SHADOW:
                 return this.shadowRoute();
@@ -595,7 +602,7 @@ class MigrationOrchestrator extends EventEmitter {
      */
     constructor(config = {}) {
         super();
-        this.name = config.name || 'MigrationOrchestrator';
+        this.name = requireOption(config, 'name');
         this.services = new Map();
         this.routers = new Map();
         this.tracers = [];
@@ -701,6 +708,7 @@ class MigrationOrchestrator extends EventEmitter {
                             metrics.shadowRequests++;
                         })
                         .catch((error) => {
+                            console.error('[Warning] StranglerMS.route: shadow request failed:', error);
                             traceContext.addTag(shadowSpan, 'error', error.message);
                             traceContext.endSpan(shadowSpan);
                         });

@@ -110,6 +110,7 @@ class MessageJournal extends EventEmitter {
         entry.persisted = true;
         this.emit('entryPersisted', { entryId: entry.id });
       } catch (error) {
+        console.error('[Warning] MessageJournal.append: caught error while handling the operation:', error);
         this.emit('persistenceError', { entryId: entry.id, error });
       }
     }

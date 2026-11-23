@@ -185,6 +185,7 @@ class RPCServer {
 
       return responseMsg.serialize();
     } catch (error) {
+      console.error('[Warning] RemoteProcedureInvocation.handleRequest: caught error while handling the operation:', error);
       const response = new RPCResponse(
         message.data ? message.data.id : null,
         null,

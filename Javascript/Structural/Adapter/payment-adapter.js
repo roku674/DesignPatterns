@@ -9,6 +9,13 @@ const crypto = require('crypto');
 
 // ============= Target Interface =============
 
+function requireOption(source, name) {
+  if (source === undefined || source === null || source[name] === undefined || source[name] === null) {
+    throw new Error(`Missing required option '${name}'`);
+  }
+  return source[name];
+}
+
 /**
  * Unified payment processor interface
  */
@@ -72,7 +79,7 @@ class StripeAPI {
             amount: params.amount,
             currency: params.currency,
             status: Math.random() > 0.1 ? 'succeeded' : 'failed',
-            description: params.description || '',
+            description: requireOption(params, 'description'),
             metadata: params.metadata || {},
             created: Math.floor(Date.now() / 1000),
             source: params.source
@@ -114,7 +121,7 @@ class StripeAPI {
             charge: chargeId,
             currency: charge.currency,
             status: 'succeeded',
-            reason: params.reason || 'requested_by_customer',
+            reason: requireOption(params, 'reason'),
             created: Math.floor(Date.now() / 1000)
           };
 
@@ -290,7 +297,7 @@ class SquareAPI {
             status: 'COMPLETED',
             amount_money: refundRequest.amount_money,
             payment_id: paymentId,
-            reason: refundRequest.reason || 'Customer request',
+            reason: requireOption(refundRequest, 'reason'),
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
           };
@@ -359,6 +366,7 @@ class StripeAdapter extends PaymentProcessor {
         provider: 'stripe'
       };
     } catch (error) {
+      console.error('[Warning] payment-adapter.processPayment: caught error while handling the operation:', error);
       return {
         transactionId: null,
         status: 'failed',
@@ -392,6 +400,7 @@ class StripeAdapter extends PaymentProcessor {
         provider: 'stripe'
       };
     } catch (error) {
+      console.error('[Warning] payment-adapter.refundPayment: caught error while handling the operation:', error);
       return {
         refundId: null,
         status: 'failed',
@@ -463,6 +472,7 @@ class PayPalAdapter extends PaymentProcessor {
         provider: 'paypal'
       };
     } catch (error) {
+      console.error('[Warning] payment-adapter.processPayment: caught error while handling the operation:', error);
       return {
         transactionId: null,
         status: 'failed',
@@ -496,6 +506,7 @@ class PayPalAdapter extends PaymentProcessor {
         provider: 'paypal'
       };
     } catch (error) {
+      console.error('[Warning] payment-adapter.refundPayment: caught error while handling the operation:', error);
       return {
         refundId: null,
         status: 'failed',
@@ -557,6 +568,7 @@ class SquareAdapter extends PaymentProcessor {
         provider: 'square'
       };
     } catch (error) {
+      console.error('[Warning] payment-adapter.processPayment: caught error while handling the operation:', error);
       return {
         transactionId: null,
         status: 'failed',
@@ -591,6 +603,7 @@ class SquareAdapter extends PaymentProcessor {
         provider: 'square'
       };
     } catch (error) {
+      console.error('[Warning] payment-adapter.refundPayment: caught error while handling the operation:', error);
       return {
         refundId: null,
         status: 'failed',

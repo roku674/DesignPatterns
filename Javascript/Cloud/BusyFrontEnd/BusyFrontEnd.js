@@ -163,6 +163,7 @@ class MessageQueue {
       await worker(message.data);
       message.status = 'completed';
     } catch (error) {
+      console.error('[Warning] BusyFrontEnd.processQueue: caught error while handling the operation:', error);
       message.status = 'failed';
       message.error = error.message;
     }

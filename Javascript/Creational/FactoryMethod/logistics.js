@@ -288,7 +288,7 @@ class PushNotificationService extends NotificationService {
         data: options.data || {},
         badge: options.badge || 0,
         sound: options.sound || 'default',
-        priority: options.priority || 'high'
+        priority: options.priority || 'normal'
       };
 
       const result = await this.sendPushNotification(pushData);
@@ -484,7 +484,8 @@ class WebhookService extends NotificationService {
     try {
       const parsed = new URL(url);
       return parsed.protocol === 'http:' || parsed.protocol === 'https:';
-    } catch {
+    } catch (error) {
+      console.error('[Warning] logistics.validateUrl: caught error while handling the operation:', error);
       return false;
     }
   }

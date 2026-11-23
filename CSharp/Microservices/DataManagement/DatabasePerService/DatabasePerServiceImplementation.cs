@@ -447,8 +447,8 @@ public class CrossServiceQueryCoordinator
         UserOrderSummary summary = new UserOrderSummary
         {
             UserId = userId,
-            UserName = user?.Name ?? "Unknown",
-            UserEmail = user?.Email ?? "Unknown",
+            UserName = user.Name,
+            UserEmail = user.Email,
             TotalOrders = orders.Count,
             TotalSpent = totalSpent,
             Orders = orders

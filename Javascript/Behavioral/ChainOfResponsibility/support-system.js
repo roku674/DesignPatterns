@@ -153,7 +153,10 @@ class RateLimitHandler extends ValidationHandler {
 
   async handle(request) {
     const errors = [];
-    const userId = request.user?.id || request.ip || 'anonymous';
+    const userId = request.user?.id || request.ip;
+    if (!userId) {
+      throw new Error('Request has neither user id nor ip to identify the caller');
+    }
     const now = Date.now();
 
     if (!this.requests.has(userId)) {

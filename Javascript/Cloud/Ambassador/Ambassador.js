@@ -23,6 +23,13 @@ const CircuitState = {
   HALF_OPEN: 'half_open'
 };
 
+function requireOption(source, name) {
+  if (source === undefined || source === null || source[name] === undefined || source[name] === null) {
+    throw new Error(`Missing required option '${name}'`);
+  }
+  return source[name];
+}
+
 /**
  * Circuit Breaker
  * Prevents cascading failures
@@ -116,6 +123,7 @@ class RetryPolicy {
       try {
         return await operation();
       } catch (error) {
+        console.error('[Warning] Ambassador.execute: caught error while handling the operation:', error);
         lastError = error;
 
         if (attempt < this.maxRetries) {
@@ -332,7 +340,7 @@ class AmbassadorProxy {
 
     const request = {
       method: options.method || 'GET',
-      url: `${this.serviceUrl}${options.path || ''}`,
+      url: `${this.serviceUrl}${requireOption(options, 'path')}`,
       headers: options.headers || {},
       body: options.body,
       ...options

@@ -25,6 +25,13 @@ const CircuitState = {
   HALF_OPEN: 'HALF_OPEN'
 };
 
+function requireOption(source, name) {
+  if (source === undefined || source === null || source[name] === undefined || source[name] === null) {
+    throw new Error(`Missing required option '${name}'`);
+  }
+  return source[name];
+}
+
 /**
  * Circuit Breaker implementation for protecting service calls
  */
@@ -78,6 +85,7 @@ class CircuitBreaker {
       const result = await fn(...args);
       return this.onSuccess(result);
     } catch (error) {
+      console.error('[Warning] index.execute: caught error while handling the operation:', error);
       return this.onFailure(error, ...args);
     }
   }
@@ -169,7 +177,7 @@ class CircuitBreaker {
 class MonitoredCircuitBreaker extends CircuitBreaker {
   constructor(options = {}) {
     super(options);
-    this.name = options.name || 'unnamed';
+    this.name = requireOption(options, 'name');
     this.monitor = options.monitor || console;
   }
 

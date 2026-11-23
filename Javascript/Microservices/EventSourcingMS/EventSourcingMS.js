@@ -375,6 +375,7 @@ class SagaCoordinator {
       sagaInstance.state = 'completed';
       sagaInstance.completedAt = new Date().toISOString();
     } catch (error) {
+      console.error('[Warning] EventSourcingMS.startSaga: caught error while handling the operation:', error);
       sagaInstance.state = 'failed';
       sagaInstance.error = error.message;
       await this.compensateSaga(sagaInstance, sagaDefinition);

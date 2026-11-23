@@ -1,3 +1,10 @@
+function requireOption(source, name) {
+  if (source === undefined || source === null || source[name] === undefined || source[name] === null) {
+    throw new Error(`Missing required option '${name}'`);
+  }
+  return source[name];
+}
+
 /**
  * PipesAndFiltersCloud Pattern
  *
@@ -251,7 +258,7 @@ class ServerlessFilter {
 class PipesAndFiltersCloud {
   constructor(config = {}) {
     this.config = {
-      region: config.region || 'us-east-1',
+      region: requireOption(config, 'region'),
       enableMonitoring: config.enableMonitoring !== false,
       enableTracing: config.enableTracing !== false,
       deadLetterQueueEnabled: config.deadLetterQueueEnabled !== false,

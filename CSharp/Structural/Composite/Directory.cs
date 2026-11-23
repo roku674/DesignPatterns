@@ -227,8 +227,9 @@ public class Directory : FileSystemComponent
                 _children.Add(new Directory(subdirInfo));
             }
         }
-        catch (UnauthorizedAccessException)
+        catch (UnauthorizedAccessException ex)
         {
+            Console.Error.WriteLine($"[Warning] Directory.LoadChildren: caught {ex.GetType().Name} while handling the operation: {ex}");
             // Access denied - leave children empty
         }
     }

@@ -223,6 +223,7 @@ class CircuitBreakerMS {
             res.end(JSON.stringify(result));
 
         } catch (error) {
+          console.error('[Warning] CircuitBreakerMS.handleRequest: caught error while handling the operation:', error);
             const statusCode = error.message.includes('Circuit breaker') ? 503 : 500;
 
             res.writeHead(statusCode, {

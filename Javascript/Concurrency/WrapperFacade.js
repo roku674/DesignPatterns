@@ -39,6 +39,7 @@ class FileSystemFacade {
       const content = await fs.readFile(fullPath, this.encoding);
       return { success: true, content, path: fullPath };
     } catch (error) {
+      console.error('[Warning] WrapperFacade.readFile: caught error while handling the operation:', error);
       return { success: false, error: error.message, path: filePath };
     }
   }
@@ -58,6 +59,7 @@ class FileSystemFacade {
       await fs.writeFile(fullPath, content, this.encoding);
       return { success: true, path: fullPath, bytes: content.length };
     } catch (error) {
+      console.error('[Warning] WrapperFacade.writeFile: caught error while handling the operation:', error);
       return { success: false, error: error.message, path: filePath };
     }
   }
@@ -71,6 +73,7 @@ class FileSystemFacade {
       await fs.appendFile(fullPath, content, this.encoding);
       return { success: true, path: fullPath };
     } catch (error) {
+      console.error('[Warning] WrapperFacade.appendFile: caught error while handling the operation:', error);
       return { success: false, error: error.message, path: filePath };
     }
   }
@@ -83,7 +86,8 @@ class FileSystemFacade {
       const fullPath = this.resolvePath(filePath);
       await fs.access(fullPath);
       return true;
-    } catch {
+    } catch (error) {
+      console.error('[Warning] WrapperFacade.exists: caught error while handling the operation:', error);
       return false;
     }
   }
@@ -97,6 +101,7 @@ class FileSystemFacade {
       await fs.unlink(fullPath);
       return { success: true, path: fullPath };
     } catch (error) {
+      console.error('[Warning] WrapperFacade.deleteFile: caught error while handling the operation:', error);
       return { success: false, error: error.message, path: filePath };
     }
   }
@@ -118,6 +123,7 @@ class FileSystemFacade {
 
       return { success: true, items, path: fullPath };
     } catch (error) {
+      console.error('[Warning] WrapperFacade.items: caught error while handling the operation:', error);
       return { success: false, error: error.message, path: dirPath };
     }
   }
@@ -131,6 +137,7 @@ class FileSystemFacade {
       await fs.mkdir(fullPath, { recursive: true });
       return { success: true, path: fullPath };
     } catch (error) {
+      console.error('[Warning] WrapperFacade.createDirectory: caught error while handling the operation:', error);
       return { success: false, error: error.message, path: dirPath };
     }
   }
@@ -146,6 +153,7 @@ class FileSystemFacade {
       await fs.copyFile(fullSource, fullDest);
       return { success: true, source: fullSource, dest: fullDest };
     } catch (error) {
+      console.error('[Warning] WrapperFacade.copyFile: caught error while handling the operation:', error);
       return { success: false, error: error.message };
     }
   }
@@ -168,6 +176,7 @@ class FileSystemFacade {
         modifiedAt: stats.mtime
       };
     } catch (error) {
+      console.error('[Warning] WrapperFacade.getStats: caught error while handling the operation:', error);
       return { success: false, error: error.message, path: filePath };
     }
   }
@@ -256,6 +265,7 @@ class HttpClientFacade {
           attempt: attempt + 1
         };
       } catch (error) {
+        console.error('[Warning] WrapperFacade.request: caught error while handling the operation:', error);
         lastError = error;
 
         if (attempt < retries) {
@@ -346,6 +356,7 @@ class DatabaseFacade {
 
       return { success: true, message: 'Connected to database' };
     } catch (error) {
+      console.error('[Warning] WrapperFacade.connect: caught error while handling the operation:', error);
       return { success: false, error: error.message };
     }
   }
@@ -367,6 +378,7 @@ class DatabaseFacade {
 
       return { success: true, message: 'Disconnected from database' };
     } catch (error) {
+      console.error('[Warning] WrapperFacade.disconnect: caught error while handling the operation:', error);
       return { success: false, error: error.message };
     }
   }
@@ -402,6 +414,7 @@ class DatabaseFacade {
         executionTime: 100
       };
     } catch (error) {
+      console.error('[Warning] WrapperFacade.query: caught error while handling the operation:', error);
       return { success: false, error: error.message };
     }
   }
@@ -598,6 +611,7 @@ class WebSocketFacade extends EventEmitter {
 
       return { success: true, message: 'Sent' };
     } catch (error) {
+      console.error('[Warning] WrapperFacade.send: caught error while handling the operation:', error);
       return { success: false, error: error.message };
     }
   }
@@ -624,6 +638,7 @@ class WebSocketFacade extends EventEmitter {
       try {
         await this.connect();
       } catch (error) {
+        console.error('[Warning] WrapperFacade.attemptReconnect: caught error while handling the operation:', error);
         this.emit('reconnect_failed', error);
       }
     }, this.reconnectDelay);

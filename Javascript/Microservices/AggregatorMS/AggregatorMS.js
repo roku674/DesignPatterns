@@ -16,6 +16,13 @@
 const EventEmitter = require('events');
 const crypto = require('crypto');
 
+function requireOption(source, name) {
+  if (source === undefined || source === null || source[name] === undefined || source[name] === null) {
+    throw new Error(`Missing required option '${name}'`);
+  }
+  return source[name];
+}
+
 /**
  * Service registry with health checking
  */
@@ -418,6 +425,7 @@ class RetryPolicy {
       try {
         return await fn(attempt);
       } catch (error) {
+        console.error('[Warning] AggregatorMS.execute: caught error while handling the operation:', error);
         lastError = error;
 
         if (attempt < this.maxAttempts) {
@@ -451,7 +459,7 @@ class AggregatorMS extends EventEmitter {
   constructor(config = {}) {
     super();
     this.config = config;
-    this.serviceName = config.serviceName || 'aggregator-ms';
+    this.serviceName = requireOption(config, 'serviceName');
 
     this.registry = new ServiceRegistry();
     this.tracer = new DistributedTracer();
@@ -572,6 +580,7 @@ class AggregatorMS extends EventEmitter {
         this.tracer.finishSpan(traceId, spanId, { success: true });
         return { service: serviceConfig.name, success: true, data: result };
       } catch (error) {
+        console.error('[Warning] AggregatorMS.promises: caught error while handling the operation:', error);
         this.tracer.finishSpan(traceId, spanId, {
           success: false,
           error: error.message
@@ -611,6 +620,7 @@ class AggregatorMS extends EventEmitter {
         this.tracer.finishSpan(traceId, spanId, { success: true });
         results.push({ service: serviceConfig.name, success: true, data: result });
       } catch (error) {
+        console.error('[Warning] AggregatorMS.aggregateSequential: caught error while handling the operation:', error);
         this.tracer.finishSpan(traceId, spanId, {
           success: false,
           error: error.message
@@ -656,6 +666,7 @@ class AggregatorMS extends EventEmitter {
         results.push({ service: serviceConfig.name, success: true, data: result });
         context = { ...context, ...result };
       } catch (error) {
+        console.error('[Warning] AggregatorMS.aggregateWaterfall: caught error while handling the operation:', error);
         this.tracer.finishSpan(traceId, spanId, {
           success: false,
           error: error.message
@@ -688,7 +699,7 @@ class AggregatorMS extends EventEmitter {
   async callService(serviceConfig, traceId) {
     const instance = await this.registry.getInstance(
       serviceConfig.name,
-      serviceConfig.loadBalancing || 'round-robin'
+      requireOption(serviceConfig, 'loadBalancing')
     );
 
     await this.delay(Math.random() * 50);

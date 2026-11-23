@@ -7,6 +7,13 @@
 
 // ============= Function Decorators =============
 
+function requireOption(source, name) {
+  if (source === undefined || source === null || source[name] === undefined || source[name] === null) {
+    throw new Error(`Missing required option '${name}'`);
+  }
+  return source[name];
+}
+
 /**
  * Logging Decorator - Logs function calls with arguments and results
  */
@@ -14,7 +21,7 @@ function withLogging(fn, options = {}) {
   const { prefix = '[LOG]', logArgs = true, logResult = true } = options;
 
   return async function(...args) {
-    const functionName = fn.name || 'anonymous';
+    const functionName = requireOption(fn, 'name');
     const timestamp = new Date().toISOString();
 
     if (logArgs) {
@@ -210,6 +217,7 @@ function withErrorHandling(fn, errorHandler) {
     try {
       return await fn.apply(this, args);
     } catch (error) {
+      console.error('[Warning] coffee-shop.withErrorHandling: caught error while handling the operation:', error);
       return errorHandler(error, args);
     }
   };

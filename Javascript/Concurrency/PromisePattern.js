@@ -769,7 +769,9 @@ async function example7_DebouncerThrottler() {
       callCount++;
       console.log(`Debounced call executed (${callCount})`);
       return callCount;
-    }).catch(() => {});
+    }).catch(error => {
+      console.error('[Warning] PromisePattern.demo: debounced call rejected:', error);
+    });
 
     await new Promise(resolve => setTimeout(resolve, 200));
   }

@@ -98,6 +98,7 @@ class Recipient extends EventEmitter {
 
       return { success: true, duration };
     } catch (error) {
+      console.error('[Warning] RecipientList.receive: caught error while handling the operation:', error);
       this.failedCount++;
       this.emit('messageError', { message, error });
 

@@ -354,6 +354,7 @@ class LoginPresenter extends Presenter {
       await this.model.authenticate(username, password);
       this._errorMessage = '';
     } catch (error) {
+      console.error('[Warning] index._handleLogin: caught error while handling the operation:', error);
       this._errorMessage = error.message;
     } finally {
       this._isLoading = false;

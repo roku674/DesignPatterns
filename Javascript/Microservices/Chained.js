@@ -295,6 +295,7 @@ class ChainLink extends EventEmitter {
                         fallback: true
                     };
                 } catch (handlerError) {
+                  console.error('[Warning] Chained.execute: caught error while handling the operation:', handlerError);
                     error = handlerError;
                 }
             }

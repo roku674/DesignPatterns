@@ -23,9 +23,16 @@ const CircuitState = {
     HALF_OPEN: 'HALF_OPEN'
 };
 
+function requireOption(source, name) {
+  if (source === undefined || source === null || source[name] === undefined || source[name] === null) {
+    throw new Error(`Missing required option '${name}'`);
+  }
+  return source[name];
+}
+
 class DistributedStateManager {
     constructor(config = {}) {
-        this.instanceId = config.instanceId || `instance-${Math.random().toString(36).substr(2, 9)}`;
+        this.instanceId = requireOption(config, 'instanceId');
         this.storage = new Map();
         this.subscriptions = new Map();
         this.redis = config.redis || null;

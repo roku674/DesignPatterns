@@ -146,6 +146,7 @@ class AsyncOperation {
 
       return new AsyncOperationResult(this.token, true, result);
     } catch (error) {
+      console.error('[Warning] AsynchronousCompletionToken.execute: caught error while handling the operation:', error);
       this.endTime = Date.now();
       this.status = 'failed';
 

@@ -7,6 +7,13 @@
 
 // ============= Complex Subsystems =============
 
+function requireOption(source, name) {
+  if (source === undefined || source === null || source[name] === undefined || source[name] === null) {
+    throw new Error(`Missing required option '${name}'`);
+  }
+  return source[name];
+}
+
 /**
  * Database Layer - Simulates real database operations
  */
@@ -319,7 +326,7 @@ class DataService {
     this.cache = new Cache(options.cacheTtl || 5000);
     this.validator = new Validator();
     this.logger = new Logger();
-    this.defaultTable = options.defaultTable || 'records';
+    this.defaultTable = requireOption(options, 'defaultTable');
 
     if (options.logLevel) {
       this.logger.setLevel(options.logLevel);

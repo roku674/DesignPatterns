@@ -333,6 +333,7 @@ class MessageExpiration extends EventEmitter {
         const wrapper = this.addMessage(id, message, { ...options, ttl });
         results.added.push({ id, wrapper });
       } catch (error) {
+        console.error('[Warning] MessageExpiration.addBatch: caught error while handling the operation:', error);
         results.failed.push({ id, error: error.message });
       }
     });
@@ -368,6 +369,7 @@ class MessageExpiration extends EventEmitter {
     try {
       return JSON.stringify(message).length;
     } catch (error) {
+      console.error('[Warning] MessageExpiration.estimateSize: caught error while handling the operation:', error);
       return 0;
     }
   }
