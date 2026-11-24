@@ -94,12 +94,17 @@ class HTTPRequest {
           }
 
           let parsedData = data;
-          const contentType = res.headers['content-type'] || '';
+          const contentType = res.headers['content-type'];
+          if (contentType === undefined) {
+            reject(new Error('Response is missing the content-type header'));
+            return;
+          }
 
           if (contentType.includes('application/json')) {
             try {
               parsedData = JSON.parse(data);
             } catch (e) {
+              console.error('[Warning] pizza-builder.req: caught error while handling the operation:', e);
               // Keep as string if JSON parse fails
             }
           }

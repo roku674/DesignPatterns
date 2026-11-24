@@ -245,6 +245,7 @@ public class RpcServer
         }
         catch (Exception ex)
         {
+            Console.Error.WriteLine($"[Warning] RemoteProcedureInvocationImplementation.HandleRequestAsync: caught {ex.GetType().Name} while handling the operation: {ex}");
             return new RpcResponse
             {
                 RequestId = request.RequestId,
@@ -298,8 +299,8 @@ public class UserService
 
     private Task<object> CreateUserHandler(Dictionary<string, object> parameters)
     {
-        string name = parameters["name"].ToString() ?? string.Empty;
-        string email = parameters["email"].ToString() ?? string.Empty;
+        string name = parameters["name"].ToString() ?? throw new InvalidOperationException("Parameter name must not be null");
+        string email = parameters["email"].ToString() ?? throw new InvalidOperationException("Parameter email must not be null");
 
         int newId = _users.Count + 1;
         User newUser = new User { Id = newId, Name = name, Email = email };
@@ -319,12 +320,12 @@ public class UserService
 
         if (parameters.ContainsKey("name"))
         {
-            _users[userId].Name = parameters["name"].ToString() ?? string.Empty;
+            _users[userId].Name = parameters["name"].ToString() ?? throw new InvalidOperationException("Parameter name must not be null");
         }
 
         if (parameters.ContainsKey("email"))
         {
-            _users[userId].Email = parameters["email"].ToString() ?? string.Empty;
+            _users[userId].Email = parameters["email"].ToString() ?? throw new InvalidOperationException("Parameter email must not be null");
         }
 
         return Task.FromResult<object>($"Updated user {userId}");
@@ -453,7 +454,7 @@ public class PaymentService
 
     private Task<object> RefundPaymentHandler(Dictionary<string, object> parameters)
     {
-        string transactionId = parameters["transactionId"].ToString() ?? string.Empty;
+        string transactionId = parameters["transactionId"].ToString() ?? throw new InvalidOperationException("Parameter transactionId must not be null");
         decimal amount = Convert.ToDecimal(parameters["amount"]);
 
         return Task.FromResult<object>($"Refund processed for {transactionId}: ${amount}");

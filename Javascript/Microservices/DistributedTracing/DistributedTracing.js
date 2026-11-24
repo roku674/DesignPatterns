@@ -74,6 +74,7 @@ class TraceContext {
             const baggage = JSON.parse(headers['x-baggage'] || '{}');
             context.baggage = baggage;
         } catch (e) {
+          console.error('[Warning] DistributedTracing.fromHeaders: caught error while handling the operation:', e);
             // Invalid baggage
         }
 

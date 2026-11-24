@@ -350,6 +350,7 @@ class FileLogger {
         const stats = await fs.stat(this.logFile);
         this.currentFileSize = stats.size;
       } catch (error) {
+        console.error('[Warning] database-connection.initialize: caught error while handling the operation:', error);
         this.currentFileSize = 0;
       }
 

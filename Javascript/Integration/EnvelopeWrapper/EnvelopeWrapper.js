@@ -352,6 +352,7 @@ class EnvelopeWrapper extends EventEmitter {
         const envelope = this.wrap(payload, options);
         envelopes.push(envelope);
       } catch (error) {
+        console.error('[Warning] EnvelopeWrapper.wrapBatch: caught error while handling the operation:', error);
         errors.push({ index, payload, error: error.message });
       }
     });
@@ -377,6 +378,7 @@ class EnvelopeWrapper extends EventEmitter {
         const unwrapped = this.unwrap(envelope, options);
         payloads.push(unwrapped);
       } catch (error) {
+        console.error('[Warning] EnvelopeWrapper.unwrapBatch: caught error while handling the operation:', error);
         errors.push({ index, envelope, error: error.message });
       }
     });
@@ -431,7 +433,8 @@ class EnvelopeWrapper extends EventEmitter {
   estimateSize(data) {
     try {
       return JSON.stringify(data).length;
-    } catch {
+    } catch (error) {
+      console.error('[Warning] EnvelopeWrapper.estimateSize: caught error while handling the operation:', error);
       return 0;
     }
   }

@@ -86,8 +86,9 @@ public class Scheduler
                 IMethodRequest request = _requestQueue.Take();
                 request.Execute();
             }
-            catch (InvalidOperationException)
+            catch (InvalidOperationException ex)
             {
+                Console.Error.WriteLine($"[Warning] ActiveObjectImplementation.Run: caught {ex.GetType().Name} while handling the operation: {ex}");
                 // Queue was completed
                 break;
             }
@@ -248,6 +249,7 @@ public class ActiveObjectImplementation : IActiveObject
             }
             catch (Exception ex)
             {
+                Console.Error.WriteLine($"[Warning] ActiveObjectImplementation.Execute: caught {ex.GetType().Name} while handling the operation: {ex}");
                 _future.SetException(ex);
             }
         }
@@ -276,6 +278,7 @@ public class ActiveObjectImplementation : IActiveObject
             }
             catch (Exception ex)
             {
+                Console.Error.WriteLine($"[Warning] ActiveObjectImplementation.Execute: caught {ex.GetType().Name} while handling the operation: {ex}");
                 _future.SetException(ex);
             }
         }
@@ -308,6 +311,7 @@ public class ActiveObjectImplementation : IActiveObject
             }
             catch (Exception ex)
             {
+                Console.Error.WriteLine($"[Warning] ActiveObjectImplementation.Execute: caught {ex.GetType().Name} while handling the operation: {ex}");
                 _future.SetException(ex);
             }
         }

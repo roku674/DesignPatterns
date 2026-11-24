@@ -117,6 +117,7 @@ class CommandHandler {
         }
         results.push(result);
       } catch (error) {
+        console.error('[Warning] CQRS.handleBatch: caught error while handling the operation:', error);
         results.push({ success: false, error: error.message, commandId: command.id });
       }
     }

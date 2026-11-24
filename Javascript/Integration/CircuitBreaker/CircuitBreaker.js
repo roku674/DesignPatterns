@@ -453,6 +453,7 @@ class CircuitBreaker extends EventEmitter {
           this.transition(CircuitState.HALF_OPEN);
         }
       } catch (error) {
+        console.error('[Warning] CircuitBreaker.startHealthCheck: caught error while handling the operation:', error);
         this.emit('healthCheckFailed', { error });
       }
     }, this.healthCheckInterval);

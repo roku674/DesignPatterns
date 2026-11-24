@@ -14,6 +14,13 @@
 
 const { BusinessCapabilityRegistry, BusinessCapabilityService } = require('../DecomposeByBusinessCapability/DecomposeByBusinessCapability.js');
 
+function requireOption(source, name) {
+  if (source === undefined || source === null || source[name] === undefined || source[name] === null) {
+    throw new Error(`Missing required option '${name}'`);
+  }
+  return source[name];
+}
+
 /**
  * Capability Mapper
  * Maps business domains to specific capabilities
@@ -45,7 +52,7 @@ class CapabilityMapper {
         const groupedCapabilities = new Map();
 
         capabilities.forEach(cap => {
-            const context = cap.context || 'default';
+            const context = requireOption(cap, 'context');
             if (!groupedCapabilities.has(context)) {
                 groupedCapabilities.set(context, []);
             }
@@ -231,7 +238,7 @@ class CatalogManagementService extends BusinessCapabilityService {
         const product = {
             id: productId,
             name: productData.name,
-            description: productData.description || '',
+            description: requireOption(productData, 'description'),
             category: productData.category,
             price: productData.price,
             attributes: productData.attributes || {},

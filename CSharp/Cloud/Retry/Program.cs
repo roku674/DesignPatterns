@@ -44,7 +44,8 @@ public class Program
 
         RetryPolicy<string> policy = new RetryPolicy<string>(
             maxRetries: 5,
-            strategy: new FixedIntervalRetryStrategy(TimeSpan.FromMilliseconds(500)));
+            strategy: new FixedIntervalRetryStrategy(TimeSpan.FromMilliseconds(500)),
+            shouldRetry: ex => true);
 
         try
         {
@@ -73,7 +74,8 @@ public class Program
             strategy: new ExponentialBackoffRetryStrategy(
                 initialInterval: TimeSpan.FromMilliseconds(200),
                 maxInterval: TimeSpan.FromSeconds(5),
-                multiplier: 2.0));
+                multiplier: 2.0),
+            shouldRetry: ex => true);
 
         try
         {
@@ -101,7 +103,8 @@ public class Program
             maxRetries: 5,
             strategy: new ExponentialBackoffWithJitterRetryStrategy(
                 initialInterval: TimeSpan.FromMilliseconds(100),
-                maxInterval: TimeSpan.FromSeconds(3)));
+                maxInterval: TimeSpan.FromSeconds(3)),
+            shouldRetry: ex => true);
 
         Console.WriteLine("Showing jitter effect - wait times will vary randomly:");
 
@@ -171,6 +174,7 @@ public class Program
                 TimeSpan.FromMilliseconds(500),
                 TimeSpan.FromSeconds(2)),
             timeout: TimeSpan.FromSeconds(3),
+            shouldRetry: ex => true,
             onRetry: (attempt, ex) =>
             {
                 Console.WriteLine($"[{DateTime.UtcNow:HH:mm:ss}] Retry {attempt}: {ex.Message}");
@@ -239,7 +243,8 @@ public class Program
             maxRetries: 5,
             strategy: new ExponentialBackoffRetryStrategy(
                 TimeSpan.FromMilliseconds(100),
-                TimeSpan.FromSeconds(2)));
+                TimeSpan.FromSeconds(2)),
+            shouldRetry: ex => true);
 
         // Simulate multiple operations
         Console.WriteLine("Running multiple operations...\n");

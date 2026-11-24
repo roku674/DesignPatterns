@@ -15,6 +15,13 @@
  * - Configuration Caching: Local caching with refresh strategies
  */
 
+function requireOption(source, name) {
+  if (source === undefined || source === null || source[name] === undefined || source[name] === null) {
+    throw new Error(`Missing required option '${name}'`);
+  }
+  return source[name];
+}
+
 /**
  * Configuration Store Interface
  */
@@ -316,8 +323,8 @@ class ConfigurationManager {
     }
 
     this.store = store;
-    this.environment = config.environment || 'development';
-    this.version = config.version || '1.0.0';
+    this.environment = requireOption(config, 'environment');
+    this.version = requireOption(config, 'version');
     this.cache = new Map();
     this.cacheEnabled = config.cacheEnabled !== false;
     this.cacheTTL = config.cacheTTL || 60000;

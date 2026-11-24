@@ -13,6 +13,13 @@
  * - Proxy Sidecar: Request/Response interception
  */
 
+function requireOption(source, name) {
+  if (source === undefined || source === null || source[name] === undefined || source[name] === null) {
+    throw new Error(`Missing required option '${name}'`);
+  }
+  return source[name];
+}
+
 /**
  * Base Sidecar Interface
  */
@@ -79,7 +86,7 @@ class LoggingSidecar extends BaseSidecar {
     super('logging', config);
     this.logs = [];
     this.maxLogs = config.maxLogs || 1000;
-    this.logLevel = config.logLevel || 'info';
+    this.logLevel = requireOption(config, 'logLevel');
   }
 
   async beforeRequest(request) {
@@ -244,7 +251,10 @@ class SecuritySidecar extends BaseSidecar {
       return true;
     }
 
-    const userId = request.userId || request.ip || 'anonymous';
+    const userId = request.userId || request.ip;
+    if (!userId) {
+      throw new Error('Request has neither userId nor ip to identify the caller');
+    }
     return this.rateLimiter.allowRequest(userId);
   }
 }

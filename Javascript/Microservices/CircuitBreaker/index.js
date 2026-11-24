@@ -298,6 +298,7 @@ async function example5_HealthMonitoring() {
             return { status: 'ok' };
           });
         } catch (error) {
+          console.error('[Warning] index.simulateTraffic: caught error while handling the operation:', error);
           // Handled by circuit breaker
         }
       }));
@@ -480,6 +481,7 @@ async function example7_DynamicThresholds() {
           return { status: 'ok' };
         });
       } catch (error) {
+        console.error('[Warning] index.adjustThresholdsBasedOnTraffic: caught error while handling the operation:', error);
         // Handled
       }
     }
@@ -558,6 +560,7 @@ async function example8_Dashboard() {
             return { status: 'ok' };
           });
         } catch (error) {
+          console.error('[Warning] index.traffic: caught error while handling the operation:', error);
           // Handled
         }
       }));
@@ -738,7 +741,9 @@ async function example10_ProductionScenario() {
       serviceMesh.notificationService.execute(async () => {
         await new Promise(resolve => setTimeout(resolve, 20));
         return { sent: true };
-      }).catch(() => {});
+      }).catch(error => {
+        console.error('[Warning] CircuitBreaker.demo: notification send failed:', error);
+      });
 
       const duration = Date.now() - startTime;
       console.log(`Order ${orderId} completed in ${duration}ms`);

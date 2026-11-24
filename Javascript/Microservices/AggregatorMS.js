@@ -443,11 +443,14 @@ class RequestAggregator {
         if (parallel) {
             // Execute in parallel
             const promises = serviceRequests.map(request =>
-                this.executeRequest(request).catch(error => ({
-                    service: request.service,
-                    success: false,
-                    error: error.message
-                }))
+                this.executeRequest(request).catch(error => {
+                    console.error(`[Warning] AggregatorMS.aggregate: request to ${request.service} failed:`, error);
+                    return {
+                        service: request.service,
+                        success: false,
+                        error: error.message
+                    };
+                })
             );
 
             results.push(...await Promise.all(promises));
@@ -458,6 +461,7 @@ class RequestAggregator {
                     const result = await this.executeRequest(request);
                     results.push(result);
                 } catch (error) {
+                  console.error('[Warning] AggregatorMS.promises: caught error while handling the operation:', error);
                     results.push({
                         service: request.service,
                         success: false,
@@ -649,6 +653,7 @@ class AggregatorMicroservice extends EventEmitter {
                 res.end(JSON.stringify({ error: 'Not found' }));
             }
         } catch (error) {
+          console.error('[Warning] AggregatorMS.handleRequest: caught error while handling the operation:', error);
             this.metrics.failedRequests++;
             res.writeHead(500, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({ error: error.message }));

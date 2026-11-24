@@ -211,7 +211,12 @@ public class AuthenticationManager
     public string ExtractClientId(string token)
     {
         // Simulate extracting client ID from token
-        return token?.Replace("token-", "client-") ?? "anonymous";
+        if (token == null)
+        {
+            throw new ArgumentNullException(nameof(token));
+        }
+
+        return token.Replace("token-", "client-");
     }
 }
 

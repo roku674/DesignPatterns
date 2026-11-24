@@ -1,3 +1,10 @@
+function requireOption(source, name) {
+  if (source === undefined || source === null || source[name] === undefined || source[name] === null) {
+    throw new Error(`Missing required option '${name}'`);
+  }
+  return source[name];
+}
+
 /**
  * Competing Consumers Pattern
  *
@@ -241,7 +248,7 @@ class Consumer {
 class CompetingConsumers {
   constructor(config = {}) {
     this.config = {
-      queueName: config.queueName || 'work-queue',
+      queueName: requireOption(config, 'queueName'),
       consumerCount: config.consumerCount || 3,
       visibilityTimeout: config.visibilityTimeout || 30000,
       maxRetries: config.maxRetries || 3,

@@ -98,8 +98,9 @@ public class DatabaseRecord : ICloneable
             string json = JsonSerializer.Serialize(value);
             return JsonSerializer.Deserialize(json, type);
         }
-        catch
+        catch (Exception ex)
         {
+            Console.Error.WriteLine($"[Warning] DatabaseRecord.CloneValue: caught {ex.GetType().Name} while handling the operation: {ex}");
             // If serialization fails, return the original reference
             return value;
         }
@@ -177,8 +178,9 @@ public class DatabaseRecord : ICloneable
         {
             return (T)Convert.ChangeType(value, typeof(T));
         }
-        catch
+        catch (Exception ex)
         {
+            Console.Error.WriteLine($"[Warning] DatabaseRecord.SetField: caught {ex.GetType().Name} while handling the operation: {ex}");
             return default(T);
         }
     }

@@ -351,6 +351,7 @@ class CompositeMapper extends MessagingMapper {
                 this.mappingCount++;
                 return message;
             } catch (error) {
+              console.error('[Warning] MessagingMapper.toMessage: caught error while handling the operation:', error);
                 continue;
             }
         }
@@ -369,6 +370,7 @@ class CompositeMapper extends MessagingMapper {
                 this.mappingCount++;
                 return domainObject;
             } catch (error) {
+              console.error('[Warning] MessagingMapper.fromMessage: caught error while handling the operation:', error);
                 continue;
             }
         }

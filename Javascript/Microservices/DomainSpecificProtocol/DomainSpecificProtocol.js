@@ -313,6 +313,7 @@ class TradingProtocolServer extends EventEmitter {
           throw new Error(`Unsupported message type: ${message.type}`);
       }
     } catch (error) {
+      console.error('[Warning] DomainSpecificProtocol.handleMessage: caught error while handling the operation:', error);
       return this.createErrorResponse(error.message);
     }
   }

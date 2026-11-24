@@ -16,6 +16,13 @@ const {
   demonstrateAntiCorruptionLayer
 } = require('./AntiCorruptionLayer');
 
+function lookupMapping(mapping, key, description) {
+  if (!Object.prototype.hasOwnProperty.call(mapping, key)) {
+    throw new Error(`No mapping defined for ${description}: ${key}`);
+  }
+  return mapping[key];
+}
+
 /**
  * Scenario 1: Basic Anti-Corruption Layer
  * Demonstrates protecting domain model from legacy system
@@ -209,7 +216,7 @@ async function scenario4_MultipleLegacySystems() {
         legacyOrder.ord_num,
         customer,
         legacyOrder.ord_items,
-        statusMap[legacyOrder.ord_status] || 'unknown',
+        lookupMapping(statusMap, legacyOrder.ord_status, 'legacy order status'),
         new Date(legacyOrder.create_ts)
       );
     }
@@ -317,7 +324,7 @@ async function scenario5_MicroservicesIntegration() {
         externalPayment.transaction_id,
         externalPayment.amount_cents / 100,
         externalPayment.currency_code,
-        statusMap[externalPayment.payment_status] || 'unknown',
+        lookupMapping(statusMap, externalPayment.payment_status, 'external payment status'),
         externalPayment.payment_method,
         new Date(externalPayment.timestamp_utc),
         externalPayment.processor_reference
@@ -668,7 +675,7 @@ async function scenario8_ThirdPartyIntegration() {
 
       return new ShippingRate(
         apiResponse.carrier,
-        serviceMap[apiResponse.service_level] || 'standard',
+        lookupMapping(serviceMap, apiResponse.service_level, 'API service level'),
         apiResponse.rate_cents / 100,
         apiResponse.currency,
         apiResponse.est_delivery_days,
@@ -689,7 +696,7 @@ async function scenario8_ThirdPartyIntegration() {
         apiResponse.shipment_id,
         apiResponse.tracking_num,
         apiResponse.label_url,
-        statusMap[apiResponse.status_code] || 'unknown'
+        lookupMapping(statusMap, apiResponse.status_code, 'API status code')
       );
     }
   }

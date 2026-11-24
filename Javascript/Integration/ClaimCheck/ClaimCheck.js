@@ -297,6 +297,7 @@ class ClaimCheck extends EventEmitter {
         const claimCheck = this.createClaimCheck(data, options);
         claimChecks.push(claimCheck);
       } catch (error) {
+        console.error('[Warning] ClaimCheck.createBatch: caught error while handling the operation:', error);
         errors.push({ index, error: error.message });
       }
     });
@@ -322,6 +323,7 @@ class ClaimCheck extends EventEmitter {
         const data = this.redeemClaimCheck(claimCheck, options);
         dataItems.push(data);
       } catch (error) {
+        console.error('[Warning] ClaimCheck.redeemBatch: caught error while handling the operation:', error);
         errors.push({ index, claimId: claimCheck.claimId, error: error.message });
       }
     });
@@ -446,7 +448,8 @@ class ClaimCheck extends EventEmitter {
   estimateSize(data) {
     try {
       return JSON.stringify(data).length;
-    } catch {
+    } catch (error) {
+      console.error('[Warning] ClaimCheck.estimateSize: caught error while handling the operation:', error);
       return 0;
     }
   }

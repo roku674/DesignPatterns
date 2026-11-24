@@ -69,6 +69,7 @@ class TokenGenerator {
         payload
       };
     } catch (error) {
+      console.error('[Warning] ValetKey.verify: caught error while handling the operation:', error);
       return { valid: false, reason: 'Invalid token format' };
     }
   }
@@ -158,6 +159,7 @@ class PreSignedUrlGenerator {
         expiresAt
       };
     } catch (error) {
+      console.error('[Warning] ValetKey.verify: caught error while handling the operation:', error);
       return { valid: false, reason: 'Invalid URL format' };
     }
   }

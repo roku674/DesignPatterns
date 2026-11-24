@@ -221,6 +221,7 @@ class PollingEndpoint extends MessageEndpoint {
                     await this.handleMessage(message);
                 }
             } catch (error) {
+              console.error('[Warning] MessageEndpoint._startPolling: caught error while handling the operation:', error);
                 this.emit('polling-error', error);
             }
         }, this.pollingInterval);
@@ -256,6 +257,7 @@ class EventDrivenEndpoint extends MessageEndpoint {
             try {
                 await this.handleMessage(message);
             } catch (error) {
+              console.error('[Warning] MessageEndpoint._doStart: caught error while handling the operation:', error);
                 // Error already handled in handleMessage
             }
         };

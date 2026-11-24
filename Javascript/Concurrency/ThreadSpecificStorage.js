@@ -17,6 +17,13 @@
 
 const { AsyncLocalStorage } = require('async_hooks');
 
+function requireOption(source, name) {
+  if (source === undefined || source === null || source[name] === undefined || source[name] === null) {
+    throw new Error(`Missing required option '${name}'`);
+  }
+  return source[name];
+}
+
 /**
  * Thread-Specific Storage using AsyncLocalStorage
  */
@@ -322,8 +329,8 @@ class ContextualLogger {
    * Format and print log entry
    */
   formatAndPrint(entry) {
-    const requestId = entry.context.requestId || 'no-context';
-    const userId = entry.context.userId || 'anonymous';
+    const requestId = requireOption(entry.context, 'requestId');
+    const userId = requireOption(entry.context, 'userId');
     console.log(
       `[${entry.level}] [${requestId}] [${userId}] ${entry.message}`,
       entry.data

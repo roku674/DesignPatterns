@@ -14,6 +14,14 @@
  * - Security Anti-Patterns: Hardcoded Secrets, No Encryption
  */
 
+function requireEnv(name) {
+  const value = process.env[name];
+  if (value === undefined) {
+    throw new Error(`Missing required environment variable ${name}`);
+  }
+  return value;
+}
+
 /**
  * ANTI-PATTERN 1: Chatty I/O
  * Making many small requests instead of fewer larger requests
@@ -386,8 +394,8 @@ class HardcodedConfigAntiPattern {
     return {
       apiUrl: process.env.API_URL,
       databaseHost: process.env.DATABASE_HOST,
-      maxConnections: parseInt(process.env.MAX_CONNECTIONS || '100', 10),
-      timeout: parseInt(process.env.TIMEOUT || '5000', 10),
+      maxConnections: parseInt(requireEnv('MAX_CONNECTIONS'), 10),
+      timeout: parseInt(requireEnv('TIMEOUT'), 10),
       benefits: [
         'Environment-specific configuration',
         'No redeployment needed for config changes',
@@ -487,6 +495,7 @@ class NoCircuitBreakerAntiPattern {
     try {
       await this.callWithCircuitBreaker();
     } catch (error) {
+      console.error('[Warning] AntiPattern.demonstrate: caught error while handling the operation:', error);
       this.circuitOpen = true;
     }
 

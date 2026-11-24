@@ -95,8 +95,9 @@ public class AsynchronousCompletionTokenImplementation : IAsynchronousCompletion
         {
             Task.WaitAll(new Task[] { downloadTask, dbTask, apiTask, cancelledTask });
         }
-        catch (AggregateException)
+        catch (AggregateException ex)
         {
+            Console.Error.WriteLine($"[Warning] AsynchronousCompletionTokenImplementation.SimulateSlowOperationAsync: caught {ex.GetType().Name} while handling the operation: {ex}");
             // Expected for cancelled tasks
         }
 

@@ -35,6 +35,13 @@ const TokenStatus = {
   INVALID: 'invalid'
 };
 
+function requireOption(source, name) {
+  if (source === undefined || source === null || source[name] === undefined || source[name] === null) {
+    throw new Error(`Missing required option '${name}'`);
+  }
+  return source[name];
+}
+
 /**
  * Access Token Manager
  * Manages token lifecycle including generation, validation, refresh, and revocation
@@ -59,8 +66,8 @@ class AccessToken {
       secret: config.secret,
       accessTokenExpiry: config.accessTokenExpiry || 900, // 15 minutes
       refreshTokenExpiry: config.refreshTokenExpiry || 604800, // 7 days
-      algorithm: config.algorithm || 'HS256',
-      issuer: config.issuer || 'microservice-auth',
+      algorithm: requireOption(config, 'algorithm'),
+      issuer: requireOption(config, 'issuer'),
       audience: config.audience || ['microservice-api'],
       ...config
     };
@@ -229,6 +236,7 @@ class AccessToken {
       };
 
     } catch (error) {
+      console.error('[Warning] AccessToken.hasRequiredRoles: caught error while handling the operation:', error);
       return {
         valid: false,
         status: TokenStatus.INVALID,

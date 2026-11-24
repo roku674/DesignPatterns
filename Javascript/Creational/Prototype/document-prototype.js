@@ -3,6 +3,13 @@
  * Real object cloning with deep copy for complex data structures
  */
 
+function requireOption(source, name) {
+  if (source === undefined || source === null || source[name] === undefined || source[name] === null) {
+    throw new Error(`Missing required option '${name}'`);
+  }
+  return source[name];
+}
+
 /**
  * Deep clone utility
  */
@@ -90,8 +97,8 @@ class UserProfile extends Cloneable {
   constructor(data = {}) {
     super();
     this.id = data.id || null;
-    this.username = data.username || '';
-    this.email = data.email || '';
+    this.username = requireOption(data, 'username');
+    this.email = requireOption(data, 'email');
     this.profile = data.profile || {
       firstName: '',
       lastName: '',
@@ -162,7 +169,7 @@ class UserProfile extends Cloneable {
 class ApplicationState extends Cloneable {
   constructor(data = {}) {
     super();
-    this.route = data.route || '/';
+    this.route = requireOption(data, 'route');
     this.user = data.user || null;
     this.ui = data.ui || {
       sidebar: { open: true, width: 250 },
@@ -219,7 +226,7 @@ class ApplicationState extends Cloneable {
 class Configuration extends Cloneable {
   constructor(data = {}) {
     super();
-    this.environment = data.environment || 'development';
+    this.environment = requireOption(data, 'environment');
     this.server = data.server || {
       host: 'localhost',
       port: 3000,
@@ -278,8 +285,8 @@ class Configuration extends Cloneable {
 class APIRequest extends Cloneable {
   constructor(data = {}) {
     super();
-    this.method = data.method || 'GET';
-    this.url = data.url || '';
+    this.method = requireOption(data, 'method');
+    this.url = requireOption(data, 'url');
     this.headers = data.headers || {};
     this.params = data.params || {};
     this.body = data.body || null;

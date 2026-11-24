@@ -93,10 +93,10 @@ public class SqlServerDatabase : IDatabase
             Product newProduct = new Product
             {
                 Id = _nextId++,
-                Name = parameters["@Name"].ToString() ?? string.Empty,
+                Name = parameters["@Name"].ToString() ?? throw new InvalidOperationException("Parameter @Name must not be null"),
                 Price = Convert.ToDecimal(parameters["@Price"]),
                 StockQuantity = Convert.ToInt32(parameters["@StockQuantity"]),
-                Category = parameters["@Category"].ToString() ?? string.Empty
+                Category = parameters["@Category"].ToString() ?? throw new InvalidOperationException("Parameter @Category must not be null")
             };
             _products[newProduct.Id] = newProduct;
             return Task.FromResult(1);
@@ -107,7 +107,7 @@ public class SqlServerDatabase : IDatabase
             if (_products.ContainsKey(id))
             {
                 if (parameters.ContainsKey("@Name"))
-                    _products[id].Name = parameters["@Name"].ToString() ?? string.Empty;
+                    _products[id].Name = parameters["@Name"].ToString() ?? throw new InvalidOperationException("Parameter @Name must not be null");
                 if (parameters.ContainsKey("@Price"))
                     _products[id].Price = Convert.ToDecimal(parameters["@Price"]);
                 if (parameters.ContainsKey("@StockQuantity"))

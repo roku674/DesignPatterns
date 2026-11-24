@@ -494,6 +494,7 @@ class TokenSession extends ClientSessionStore {
       const payload = Buffer.from(parts[1], 'base64').toString('utf8');
       return JSON.parse(payload);
     } catch (error) {
+      console.error('[Warning] index.decodeToken: caught error while handling the operation:', error);
       return { exp: 0, userId: null };
     }
   }

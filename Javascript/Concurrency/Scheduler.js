@@ -154,8 +154,8 @@ class Scheduler {
       this.emit('taskStart', task);
 
       // Execute task asynchronously
-      this.executeTask(task).catch(() => {
-        // Error handling is done in executeTask
+      this.executeTask(task).catch(error => {
+        console.error(`[Warning] Scheduler.processQueue: task ${task.id} rejected after executeTask handled it:`, error);
       });
     }
 
@@ -178,6 +178,7 @@ class Scheduler {
       this.emit('taskComplete', task);
       this.processQueue();
     } catch (error) {
+      console.error('[Warning] Scheduler.executeTask: caught error while handling the operation:', error);
       if (attempt < this.retryAttempts) {
         this.stats.totalRetries++;
         await new Promise(resolve => setTimeout(resolve, this.retryDelay));

@@ -201,6 +201,7 @@ class MessageChannel extends EventEmitter {
                 try {
                     handler(message);
                 } catch (error) {
+                  console.error('[Warning] MessageChannel._deliver: caught error while handling the operation:', error);
                     this.emit('subscriber-error', error, handler);
                 }
             });

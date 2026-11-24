@@ -172,7 +172,7 @@ public class CustomerAntiCorruptionLayer
     /// </summary>
     public List<Customer> TranslateBatchToModern(List<LegacyCustomer> legacyCustomers)
     {
-        return legacyCustomers?.Select(TranslateToModern).ToList() ?? new List<Customer>();
+        return legacyCustomers?.Select(TranslateToModern).ToList() ?? throw new InvalidOperationException("The legacy system returned no customer list");
     }
 
     private CustomerStatus TranslateStatus(string legacyStatus)

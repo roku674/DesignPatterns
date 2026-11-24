@@ -45,7 +45,10 @@ class FileSystem {
     }
 
     console.log(`  [SYNC] Read ${filename} (blocked for 100ms)`);
-    return this.files.get(filename) || '';
+    if (!this.files.has(filename)) {
+      throw new Error(`File not found: ${filename}`);
+    }
+    return this.files.get(filename);
   }
 
   // Simulated asynchronous read (non-blocking)
@@ -53,7 +56,10 @@ class FileSystem {
     this.operationCount++;
     await new Promise(resolve => setTimeout(resolve, 100));
     console.log(`  [ASYNC] Read ${filename} (non-blocking 100ms)`);
-    return this.files.get(filename) || '';
+    if (!this.files.has(filename)) {
+      throw new Error(`File not found: ${filename}`);
+    }
+    return this.files.get(filename);
   }
 
   getStats() {

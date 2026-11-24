@@ -24,6 +24,13 @@ const HealthStatus = {
   UNKNOWN: 'unknown'
 };
 
+function requireOption(source, name) {
+  if (source === undefined || source === null || source[name] === undefined || source[name] === null) {
+    throw new Error(`Missing required option '${name}'`);
+  }
+  return source[name];
+}
+
 /**
  * Base Health Check
  */
@@ -79,6 +86,7 @@ class HealthCheck {
         failureCount: this.failureCount
       };
     } catch (error) {
+      console.error('[Warning] HealthEndpointMonitoring.timeoutPromise: caught error while handling the operation:', error);
       this.failureCount++;
       this.lastCheckTime = Date.now();
       this.lastStatus = HealthStatus.UNHEALTHY;
@@ -168,7 +176,7 @@ class HttpEndpointHealthCheck extends HealthCheck {
       const startTime = Date.now();
 
       const response = await fetch(url, {
-        method: config.method || 'GET',
+        method: requireOption(config, 'method'),
         headers: config.headers || {},
         signal: AbortSignal.timeout(config.timeout || 5000)
       });
@@ -281,6 +289,7 @@ class DiskSpaceHealthCheck extends HealthCheck {
           }
         };
       } catch (error) {
+        console.error('[Warning] HealthEndpointMonitoring.checkFunction: caught error while handling the operation:', error);
         return {
           status: HealthStatus.UNKNOWN,
           details: {

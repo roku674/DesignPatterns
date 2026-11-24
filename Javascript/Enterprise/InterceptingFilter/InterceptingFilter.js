@@ -171,6 +171,7 @@ class AuthenticationFilter extends Filter {
       await chain.doFilter(request, response);
 
     } catch (error) {
+      console.error('[Warning] InterceptingFilter.execute: caught error while handling the operation:', error);
       response.status = 401;
       response.body = { error: 'Authentication failed' };
     }

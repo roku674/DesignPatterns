@@ -23,6 +23,13 @@
 const http = require('http');
 const https = require('https');
 
+function requireOption(source, name) {
+  if (source === undefined || source === null || source[name] === undefined || source[name] === null) {
+    throw new Error(`Missing required option '${name}'`);
+  }
+  return source[name];
+}
+
 function generateUUID() {
     return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
         const r = Math.random() * 16 | 0;
@@ -210,7 +217,7 @@ class ServiceDiscoveryClient {
     constructor(registryUrl, options = {}) {
         this.registryUrl = registryUrl;
         this.cache = new RegistryCache(options.cacheTTL || 30000);
-        this.loadBalancer = new ClientLoadBalancer(options.loadBalancingStrategy || 'round-robin');
+        this.loadBalancer = new ClientLoadBalancer(requireOption(options, 'loadBalancingStrategy'));
         this.heartbeatManager = null;
         this.serviceId = null;
         this.useCache = options.useCache !== false;

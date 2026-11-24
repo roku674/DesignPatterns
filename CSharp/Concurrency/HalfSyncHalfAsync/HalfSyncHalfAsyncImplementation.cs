@@ -174,6 +174,7 @@ public class SyncLayer
         }
         catch (Exception ex)
         {
+            Console.Error.WriteLine($"[Warning] HalfSyncHalfAsyncImplementation.ProcessRequest: caught {ex.GetType().Name} while handling the operation: {ex}");
             result.Success = false;
             result.ErrorMessage = ex.Message;
             result.ProcessingTime = DateTime.Now - startTime;

@@ -35,6 +35,13 @@ const SubdomainType = {
     GENERIC: 'GENERIC'       // Generic functionality
 };
 
+function requireOption(source, name) {
+  if (source === undefined || source === null || source[name] === undefined || source[name] === null) {
+    throw new Error(`Missing required option '${name}'`);
+  }
+  return source[name];
+}
+
 /**
  * Subdomain Registry
  * Manages subdomain definitions and their services
@@ -231,10 +238,10 @@ class CourseManagementService extends SubdomainService {
         const course = {
             id: courseId,
             title: courseData.title,
-            description: courseData.description || '',
+            description: requireOption(courseData, 'description'),
             instructorId: courseData.instructorId,
             duration: courseData.duration || 0,
-            level: courseData.level || 'Beginner',
+            level: requireOption(courseData, 'level'),
             status: 'DRAFT',
             modules: [],
             createdAt: new Date()

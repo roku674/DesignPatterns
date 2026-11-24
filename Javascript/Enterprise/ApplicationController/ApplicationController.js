@@ -176,6 +176,7 @@ class WebApplicationController extends ApplicationController {
       return response;
 
     } catch (error) {
+      console.error('[Warning] ApplicationController.handleRequest: caught error while handling the operation:', error);
       // Execute error handlers
       for (const errorHandler of this.errorHandlers) {
         const response = await errorHandler(error, request);

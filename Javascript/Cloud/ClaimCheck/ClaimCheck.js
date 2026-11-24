@@ -312,6 +312,7 @@ class ClaimCheck extends EventEmitter {
         await this.payloadStore.delete(claimCheck.claimId);
         this.claimGenerator.revoke(claimCheck.claimId);
       } catch (error) {
+        console.error('[Warning] ClaimCheck.wrappedHandler: caught error while handling the operation:', error);
         this.metrics.errors++;
         this.emit('receive:error', {
           topic,

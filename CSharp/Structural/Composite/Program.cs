@@ -116,8 +116,8 @@ public class Program
 
         FileSystemComponent[] components = new FileSystemComponent[3];
         components[0] = rootDir;
-        components[1] = subdirDocs ?? rootDir;
-        components[2] = rootDir.Find("test1.txt") ?? rootDir;
+        components[1] = subdirDocs ?? throw new InvalidOperationException("Documents directory was not found in the demo tree");
+        components[2] = rootDir.Find("test1.txt") ?? throw new InvalidOperationException("test1.txt was not found in the demo tree");
 
         foreach (FileSystemComponent component in components)
         {

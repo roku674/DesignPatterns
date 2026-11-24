@@ -521,6 +521,7 @@ class ChainedMicroservice extends EventEmitter {
                 res.end(JSON.stringify({ error: 'Not found' }));
             }
         } catch (error) {
+          console.error('[Warning] ChainedMS.handleRequest: caught error while handling the operation:', error);
             res.writeHead(500, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({ error: error.message }));
         }

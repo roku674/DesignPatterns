@@ -135,6 +135,7 @@ class BalkingGuard {
 
       return result;
     } catch (error) {
+      console.error('[Warning] Balking.execute: caught error while handling the operation:', error);
       this.transition(BalkingState.FAILED);
 
       const result = OperationResult.error(error);
@@ -286,6 +287,7 @@ class SingletonTaskExecutor {
       this.runningTasks.delete(taskId);
       return OperationResult.executed(result);
     } catch (error) {
+      console.error('[Warning] Balking.execute: caught error while handling the operation:', error);
       this.runningTasks.delete(taskId);
       return OperationResult.error(error);
     }
@@ -341,6 +343,7 @@ class RateLimiter {
       const result = await operation();
       return OperationResult.executed(result);
     } catch (error) {
+      console.error('[Warning] Balking.attempt: caught error while handling the operation:', error);
       return OperationResult.error(error);
     }
   }
@@ -463,6 +466,7 @@ class IdempotentHandler {
 
       return OperationResult.executed(result);
     } catch (error) {
+      console.error('[Warning] Balking.execute: caught error while handling the operation:', error);
       return OperationResult.error(error);
     }
   }

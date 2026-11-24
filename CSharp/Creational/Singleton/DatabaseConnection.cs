@@ -311,8 +311,9 @@ public sealed class DatabaseConnection : IDisposable
             int result = await ExecuteScalarAsync<int>("SELECT 1");
             return result == 1;
         }
-        catch
+        catch (Exception ex)
         {
+            Console.Error.WriteLine($"[Warning] DatabaseConnection.TestConnectionAsync: caught {ex.GetType().Name} while handling the operation: {ex}");
             return false;
         }
     }

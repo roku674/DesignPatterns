@@ -65,6 +65,7 @@ public abstract class NotificationServiceFactory
             }
             catch (Exception ex)
             {
+                Console.Error.WriteLine($"[Warning] NotificationServiceFactory.SendBatchAsync: caught {ex.GetType().Name} while handling the operation: {ex}");
                 result.FailureCount++;
                 result.Errors.Add($"Error for {request.Recipient}: {ex.Message}");
             }

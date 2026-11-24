@@ -289,6 +289,7 @@ class LoginPresenter extends Presenter {
       await this.model.authenticate(username, password);
       this.view.showLoading(false);
     } catch (error) {
+      console.error('[Warning] index.handleLogin: caught error while handling the operation:', error);
       this.view.showLoading(false);
       this.view.showError(error.message);
     }
@@ -577,6 +578,7 @@ class ShoppingCartPresenter extends Presenter {
     try {
       this.model.addItem(product, quantity);
     } catch (error) {
+      console.error('[Warning] index.handleAddItem: caught error while handling the operation:', error);
       this.view.showError(error.message);
     }
   }
@@ -722,6 +724,7 @@ class DashboardPresenter extends Presenter {
       await this.model.fetchMetrics();
       this.view.showLoading(false);
     } catch (error) {
+      console.error('[Warning] index.handleRefresh: caught error while handling the operation:', error);
       this.view.showLoading(false);
       this.view.showError(error.message);
     }
@@ -888,6 +891,7 @@ class FormValidationPresenter extends Presenter {
       this.view.showLoading(false);
       console.log('Form submitted successfully:', result);
     } catch (error) {
+      console.error('[Warning] index.handleSubmit: caught error while handling the operation:', error);
       this.view.showLoading(false);
       this.view.showError(error.message);
     }

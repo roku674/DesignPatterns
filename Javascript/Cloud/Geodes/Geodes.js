@@ -1,3 +1,10 @@
+function requireOption(source, name) {
+  if (source === undefined || source === null || source[name] === undefined || source[name] === null) {
+    throw new Error(`Missing required option '${name}'`);
+  }
+  return source[name];
+}
+
 /**
  * Geodes Pattern
  *
@@ -100,9 +107,9 @@ class Geode {
   constructor(id, config = {}) {
     this.id = id;
     this.config = {
-      region: config.region || 'us-east-1',
+      region: requireOption(config, 'region'),
       capacity: config.capacity || 1000,
-      replicationStrategy: config.replicationStrategy || 'async',
+      replicationStrategy: requireOption(config, 'replicationStrategy'),
       ...config
     };
 
@@ -287,7 +294,7 @@ class Geodes {
   constructor(config = {}) {
     this.config = {
       regions: config.regions || ['us-east-1', 'eu-west-1', 'ap-southeast-1'],
-      replicationStrategy: config.replicationStrategy || 'async',
+      replicationStrategy: requireOption(config, 'replicationStrategy'),
       ...config
     };
 

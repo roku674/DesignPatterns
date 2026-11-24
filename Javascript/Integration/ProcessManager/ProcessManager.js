@@ -62,6 +62,7 @@ class ProcessStep {
       };
 
     } catch (error) {
+      console.error('[Warning] ProcessManager.timeoutPromise: caught error while handling the operation:', error);
       const duration = Date.now() - startTime;
 
       return {
@@ -81,6 +82,7 @@ class ProcessStep {
       await this.compensate(context);
       return { success: true };
     } catch (error) {
+      console.error('[Warning] ProcessManager.executeCompensation: caught error while handling the operation:', error);
       return {
         success: false,
         error: error.message

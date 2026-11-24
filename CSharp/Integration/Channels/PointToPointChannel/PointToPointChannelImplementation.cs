@@ -244,8 +244,9 @@ public class PointToPointChannel<T>
         {
             return await _channel.Reader.ReadAsync();
         }
-        catch (ChannelClosedException)
+        catch (ChannelClosedException ex)
         {
+            Console.Error.WriteLine($"[Warning] PointToPointChannelImplementation.ReceiveAsync: caught {ex.GetType().Name} while handling the operation: {ex}");
             return null;
         }
     }
@@ -372,8 +373,9 @@ public class ReliablePointToPointChannel<T>
         {
             return await _channel.Reader.ReadAsync();
         }
-        catch (ChannelClosedException)
+        catch (ChannelClosedException ex)
         {
+            Console.Error.WriteLine($"[Warning] PointToPointChannelImplementation.ReceiveAsync: caught {ex.GetType().Name} while handling the operation: {ex}");
             return null;
         }
     }
@@ -456,8 +458,9 @@ public class PriorityPointToPointChannel<T>
         {
             return await _outputChannel.Reader.ReadAsync();
         }
-        catch (ChannelClosedException)
+        catch (ChannelClosedException ex)
         {
+            Console.Error.WriteLine($"[Warning] PointToPointChannelImplementation.ReceiveAsync: caught {ex.GetType().Name} while handling the operation: {ex}");
             return null;
         }
     }
@@ -540,8 +543,9 @@ public class TimeoutPointToPointChannel<T>
         {
             return await _channel.Reader.ReadAsync();
         }
-        catch (ChannelClosedException)
+        catch (ChannelClosedException ex)
         {
+            Console.Error.WriteLine($"[Warning] PointToPointChannelImplementation.ReceiveAsync: caught {ex.GetType().Name} while handling the operation: {ex}");
             return null;
         }
     }
@@ -613,8 +617,9 @@ public class TransactionalChannel<T>
         {
             return await _channel.Reader.ReadAsync();
         }
-        catch (ChannelClosedException)
+        catch (ChannelClosedException ex)
         {
+            Console.Error.WriteLine($"[Warning] PointToPointChannelImplementation.ReceiveAsync: caught {ex.GetType().Name} while handling the operation: {ex}");
             return null;
         }
     }
@@ -656,8 +661,9 @@ public class BoundedPointToPointChannel<T>
             await _channel.Writer.WriteAsync(message, cts.Token);
             return true;
         }
-        catch (OperationCanceledException)
+        catch (OperationCanceledException ex)
         {
+            Console.Error.WriteLine($"[Warning] PointToPointChannelImplementation.TrySendAsync: caught {ex.GetType().Name} while handling the operation: {ex}");
             return false;
         }
     }
@@ -668,8 +674,9 @@ public class BoundedPointToPointChannel<T>
         {
             return await _channel.Reader.ReadAsync();
         }
-        catch (ChannelClosedException)
+        catch (ChannelClosedException ex)
         {
+            Console.Error.WriteLine($"[Warning] PointToPointChannelImplementation.ReceiveAsync: caught {ex.GetType().Name} while handling the operation: {ex}");
             return default(T);
         }
     }

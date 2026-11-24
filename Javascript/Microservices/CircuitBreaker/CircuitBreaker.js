@@ -37,6 +37,13 @@ const CircuitState = {
     HALF_OPEN: 'HALF_OPEN'
 };
 
+function requireOption(source, name) {
+  if (source === undefined || source === null || source[name] === undefined || source[name] === null) {
+    throw new Error(`Missing required option '${name}'`);
+  }
+  return source[name];
+}
+
 /**
  * Failure Counter tracks failures in a time window
  */
@@ -161,7 +168,7 @@ class CircuitBreaker extends EventEmitter {
     constructor(options = {}) {
         super();
         
-        this.name = options.name || 'circuit-breaker';
+        this.name = requireOption(options, 'name');
         this.failureThreshold = options.failureThreshold || 5;
         this.failureRateThreshold = options.failureRateThreshold || 0.5;
         this.resetTimeout = options.resetTimeout || 60000;

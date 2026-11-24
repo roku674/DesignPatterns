@@ -101,6 +101,7 @@ class ServiceClient {
           this.createTimeout()
         ]);
       } catch (error) {
+        console.error('[Warning] Aggregator.executeWithRetry: caught error while handling the operation:', error);
         lastError = error;
         if (attempt < this.retries) {
           await this.delay(Math.pow(2, attempt) * 100);
@@ -458,6 +459,7 @@ class Aggregator extends EventEmitter {
         }
       };
     } catch (error) {
+      console.error('[Warning] Aggregator.aggregate: caught error while handling the operation:', error);
       const latency = Date.now() - startTime;
       this.updateMetrics(false, latency);
 
@@ -512,6 +514,7 @@ class Aggregator extends EventEmitter {
           data
         });
       } catch (error) {
+        console.error('[Warning] Aggregator.executeSequential: caught error while handling the operation:', error);
         results.push({
           service: serviceConfig.name,
           success: false,

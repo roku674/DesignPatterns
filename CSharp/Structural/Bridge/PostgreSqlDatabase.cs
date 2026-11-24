@@ -89,10 +89,10 @@ public class PostgreSqlDatabase : IDatabase
             Product newProduct = new Product
             {
                 Id = _nextId++,
-                Name = parameters["@Name"].ToString() ?? string.Empty,
+                Name = parameters["@Name"].ToString() ?? throw new InvalidOperationException("Parameter @Name must not be null"),
                 Price = Convert.ToDecimal(parameters["@Price"]),
                 StockQuantity = Convert.ToInt32(parameters["@StockQuantity"]),
-                Category = parameters["@Category"].ToString() ?? string.Empty
+                Category = parameters["@Category"].ToString() ?? throw new InvalidOperationException("Parameter @Category must not be null")
             };
             _products.Add(newProduct);
             return Task.FromResult(1);
@@ -104,7 +104,7 @@ public class PostgreSqlDatabase : IDatabase
             if (product != null)
             {
                 if (parameters.ContainsKey("@Name"))
-                    product.Name = parameters["@Name"].ToString() ?? string.Empty;
+                    product.Name = parameters["@Name"].ToString() ?? throw new InvalidOperationException("Parameter @Name must not be null");
                 if (parameters.ContainsKey("@Price"))
                     product.Price = Convert.ToDecimal(parameters["@Price"]);
                 if (parameters.ContainsKey("@StockQuantity"))

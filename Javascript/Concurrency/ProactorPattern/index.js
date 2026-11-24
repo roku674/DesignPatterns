@@ -86,6 +86,7 @@ class AsyncOperationProcessor {
       operation.result = result;
       callback(null, operation);
     } catch (error) {
+      console.error('[Warning] index.process: caught error while handling the operation:', error);
       operation.status = 'failed';
       operation.error = error;
       callback(error, operation);

@@ -128,6 +128,7 @@ class ServiceTarget {
       this.healthy = true;
       return true;
     } catch (error) {
+      console.error('[Warning] GatewayRouting.healthCheck: caught error while handling the operation:', error);
       this.healthy = false;
       return false;
     }

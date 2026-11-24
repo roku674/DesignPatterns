@@ -16,6 +16,13 @@ const EventEmitter = require('events');
 const crypto = require('crypto');
 const path = require('path');
 
+function lookupMapping(mapping, key, description) {
+  if (!Object.prototype.hasOwnProperty.call(mapping, key)) {
+    throw new Error(`No mapping defined for ${description}: ${key}`);
+  }
+  return mapping[key];
+}
+
 /**
  * Content Storage Manager
  */
@@ -119,7 +126,7 @@ class ContentStorage {
       '.txt': 'text/plain'
     };
 
-    return types[ext] || 'application/octet-stream';
+    return lookupMapping(types, ext, 'file extension content type');
   }
 }
 

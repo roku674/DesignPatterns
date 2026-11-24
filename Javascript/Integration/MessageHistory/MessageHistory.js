@@ -522,6 +522,7 @@ class MessageHistory extends EventEmitter {
       await this.persistenceHandler(history);
       this.emit('historyPersisted', { historyId: history.id });
     } catch (error) {
+      console.error('[Warning] MessageHistory.persistHistory: caught error while handling the operation:', error);
       this.emit('persistenceError', { historyId: history.id, error });
     }
   }

@@ -44,6 +44,13 @@ const MigrationStatus = {
     ROLLED_BACK: 'rolled_back'
 };
 
+function requireOption(source, name) {
+  if (source === undefined || source === null || source[name] === undefined || source[name] === null) {
+    throw new Error(`Missing required option '${name}'`);
+  }
+  return source[name];
+}
+
 /**
  * Feature - Represents a feature being migrated
  * @class
@@ -536,7 +543,7 @@ class RollbackManager extends EventEmitter {
 class StranglerFacade extends EventEmitter {
     constructor(config = {}) {
         super();
-        this.name = config.name || 'StranglerFacade';
+        this.name = requireOption(config, 'name');
         this.registry = new MigrationRegistry();
         this.healthMonitor = new HealthMonitor(config.healthMonitor);
         this.rollbackManager = new RollbackManager(this.registry);

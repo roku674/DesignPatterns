@@ -182,6 +182,7 @@ class UserProfileController extends PageController {
 
       return this.render('profile');
     } catch (error) {
+      console.error('[Warning] PageController.get: caught error while handling the operation:', error);
       this.errors.push('Failed to load user profile');
       return this.render('error', { statusCode: 500 });
     }
@@ -218,6 +219,7 @@ class UserProfileController extends PageController {
 
       return this.redirect(`/users/${userId}?updated=true`);
     } catch (error) {
+      console.error('[Warning] PageController.post: caught error while handling the operation:', error);
       this.errors.push('Failed to update profile');
       return this.render('profile', { user: request.body });
     }
@@ -351,6 +353,7 @@ class RegistrationPageController extends PageController {
       return this.redirect('/welcome');
 
     } catch (error) {
+      console.error('[Warning] PageController.post: caught error while handling the operation:', error);
       this.errors.push('Registration failed. Please try again.');
       return this.render('register', { username, email });
     }
@@ -392,6 +395,7 @@ class ProductPageController extends PageController {
       return this.render('product-detail');
 
     } catch (error) {
+      console.error('[Warning] PageController.get: caught error while handling the operation:', error);
       return this.render('error', {
         statusCode: 500,
         message: 'Failed to load product'
@@ -432,6 +436,7 @@ class ProductPageController extends PageController {
       });
 
     } catch (error) {
+      console.error('[Warning] PageController.post: caught error while handling the operation:', error);
       return this.json({ error: 'Failed to add to cart' }, 500);
     }
   }
@@ -483,6 +488,7 @@ class ContactPageController extends PageController {
       return this.render('contact-success');
 
     } catch (error) {
+      console.error('[Warning] PageController.post: caught error while handling the operation:', error);
       this.errors.push('Failed to send message. Please try again later.');
       return this.render('contact', { name, email, subject, message });
     }
@@ -524,6 +530,7 @@ class SearchPageController extends PageController {
       return this.render('search-results');
 
     } catch (error) {
+      console.error('[Warning] PageController.get: caught error while handling the operation:', error);
       this.errors.push('Search failed. Please try again.');
       return this.render('search', { query });
     }
@@ -560,6 +567,7 @@ class DashboardPageController extends PageController {
       return this.render('dashboard');
 
     } catch (error) {
+      console.error('[Warning] PageController.get: caught error while handling the operation:', error);
       this.errors.push('Failed to load dashboard');
       return this.render('error', { statusCode: 500 });
     }

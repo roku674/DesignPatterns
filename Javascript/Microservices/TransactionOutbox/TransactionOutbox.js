@@ -15,6 +15,13 @@
 
 const EventEmitter = require('events');
 
+function requireOption(source, name) {
+  if (source === undefined || source === null || source[name] === undefined || source[name] === null) {
+    throw new Error(`Missing required option '${name}'`);
+  }
+  return source[name];
+}
+
 /**
  * Outbox Message
  */
@@ -22,7 +29,7 @@ class OutboxMessage {
   constructor(aggregateId, eventType, payload, metadata = {}) {
     this.id = this.generateId();
     this.aggregateId = aggregateId;
-    this.aggregateType = metadata.aggregateType || 'Unknown';
+    this.aggregateType = requireOption(metadata, 'aggregateType');
     this.eventType = eventType;
     this.payload = payload;
     this.createdAt = new Date().toISOString();
@@ -35,7 +42,7 @@ class OutboxMessage {
     this.metadata = {
       correlationId: metadata.correlationId || this.id,
       causationId: metadata.causationId || this.id,
-      userId: metadata.userId || 'system',
+      userId: requireOption(metadata, 'userId'),
       ...metadata
     };
   }

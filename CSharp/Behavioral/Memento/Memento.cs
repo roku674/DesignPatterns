@@ -49,17 +49,17 @@ namespace DesignPatterns.Behavioral.Memento
         {
             Id = Guid.NewGuid().ToString();
             Timestamp = DateTime.UtcNow;
-            SaveName = saveName ?? "Autosave";
+            SaveName = saveName ?? throw new ArgumentNullException(nameof(saveName));
 
             _playerHealth = playerHealth;
             _playerMana = playerMana;
             _playerLevel = playerLevel;
             _playerExperience = playerExperience;
-            _playerPosition = playerPosition ?? "Unknown";
+            _playerPosition = playerPosition ?? throw new ArgumentNullException(nameof(playerPosition));
 
-            _inventory = new Dictionary<string, int>(inventory ?? new Dictionary<string, int>());
-            _completedQuests = new List<string>(completedQuests ?? new List<string>());
-            _activeQuests = new List<string>(activeQuests ?? new List<string>());
+            _inventory = new Dictionary<string, int>(inventory ?? throw new ArgumentNullException(nameof(inventory)));
+            _completedQuests = new List<string>(completedQuests ?? throw new ArgumentNullException(nameof(completedQuests)));
+            _activeQuests = new List<string>(activeQuests ?? throw new ArgumentNullException(nameof(activeQuests)));
 
             _checkpointId = checkpointId;
             _playTime = playTime;

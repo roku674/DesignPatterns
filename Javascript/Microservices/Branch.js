@@ -174,6 +174,7 @@ class BranchExecutor extends EventEmitter {
                         metadata: { fallback: true }
                     });
                 } catch (handlerError) {
+                  console.error('[Warning] Branch.execute: caught error while handling the operation:', handlerError);
                     error = handlerError;
                 }
             }
@@ -249,6 +250,7 @@ class BranchExecutor extends EventEmitter {
 
                 return await this.execute(context);
             } catch (error) {
+              console.error('[Warning] Branch.executeWithRetries: caught error while handling the operation:', error);
                 lastError = error;
 
                 if (attempt < this.config.retries) {
@@ -448,10 +450,13 @@ class BranchCoordinator extends EventEmitter {
 
             // Execute all branches in parallel
             const results = await Promise.all(
-                executionPromises.map(p => p.catch(error => ({
-                    success: false,
-                    error: error.message
-                })))
+                executionPromises.map(p => p.catch(error => {
+                    console.error('[Warning] BranchCoordinator.executeAll: branch execution failed:', error);
+                    return {
+                        success: false,
+                        error: error.message
+                    };
+                }))
             );
 
             // Combine results
@@ -515,10 +520,13 @@ class BranchCoordinator extends EventEmitter {
         });
 
         const results = await Promise.all(
-            executionPromises.map(p => p.catch(error => ({
-                success: false,
-                error: error.message
-            })))
+            executionPromises.map(p => p.catch(error => {
+                console.error('[Warning] BranchCoordinator.executeSelected: branch execution failed:', error);
+                return {
+                    success: false,
+                    error: error.message
+                };
+            }))
         );
 
         const strategy = options.strategy || this.defaultStrategy;

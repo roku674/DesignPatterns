@@ -86,6 +86,7 @@ class EventBus extends EventEmitter {
             try {
                 await subscriber.handle(processedEvent);
             } catch (error) {
+              console.error('[Warning] ApplicationEvents.publish: caught error while handling the operation:', error);
                 this.handleSubscriberError(processedEvent, subscriber, error);
             }
         }

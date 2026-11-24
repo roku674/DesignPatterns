@@ -47,6 +47,7 @@ class MessageTranslator {
         message: result
       };
     } catch (error) {
+      console.error('[Warning] MessageBridge.translate: caught error while handling the operation:', error);
       this.errorCount++;
       return {
         success: false,

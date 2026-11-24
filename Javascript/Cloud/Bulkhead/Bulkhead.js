@@ -301,7 +301,9 @@ class Bulkhead extends EventEmitter {
         queueTime
       });
 
-      this.executeRequest(requestContext).catch(() => {});
+      this.executeRequest(requestContext).catch(error => {
+        console.error('[Warning] Bulkhead.processQueue: queued request failed:', error);
+      });
     }
   }
 
@@ -330,6 +332,7 @@ class Bulkhead extends EventEmitter {
 
       requestContext.resolve(result);
     } catch (error) {
+      console.error('[Warning] Bulkhead.executeRequest: caught error while handling the operation:', error);
       if (error.message === 'Execution timeout') {
         this.stats.recordTimeout();
         this.emit('timeout', { name: this.name, requestId: requestContext.id });
@@ -684,7 +687,10 @@ async function scenario7_GracefulShutdown() {
   bulkhead.on('shutdown', () => console.log('Bulkhead shutdown complete'));
 
   const promises = Array(10).fill().map(() =>
-    bulkhead.execute(task).catch(e => e.message)
+    bulkhead.execute(task).catch(e => {
+      console.error('[Warning] Bulkhead.demo: task rejected:', e);
+      return e.message;
+    })
   );
 
   setTimeout(() => bulkhead.shutdown(true), 1000);
@@ -713,7 +719,10 @@ async function scenario8_LoadTesting() {
 
   const startTime = Date.now();
   const promises = Array(150).fill().map(() =>
-    bulkhead.execute(task).catch(e => 'failed')
+    bulkhead.execute(task).catch(e => {
+      console.error('[Warning] Bulkhead.demo: task rejected:', e);
+      return 'failed';
+    })
   );
 
   const results = await Promise.all(promises);

@@ -194,8 +194,9 @@ public class AdvancedDataAccess : BasicDataAccess
             await _database.RollbackTransactionAsync();
             return false;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            Console.Error.WriteLine($"[Warning] DataAccessLayer.UpdateProductPriceAsync: caught {ex.GetType().Name} while handling the operation: {ex}");
             await _database.RollbackTransactionAsync();
             return false;
         }

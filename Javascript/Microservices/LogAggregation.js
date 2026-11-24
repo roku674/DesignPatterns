@@ -32,6 +32,13 @@ const LogLevel = {
 
 const LogLevelNames = ['DEBUG', 'INFO', 'WARN', 'ERROR', 'FATAL'];
 
+function requireOption(source, name) {
+  if (source === undefined || source === null || source[name] === undefined || source[name] === null) {
+    throw new Error(`Missing required option '${name}'`);
+  }
+  return source[name];
+}
+
 /**
  * Structured Log Entry
  */
@@ -43,7 +50,7 @@ class LogEntry {
         this.levelName = LogLevelNames[level];
         this.message = message;
         this.metadata = metadata;
-        this.serviceId = metadata.serviceId || 'unknown';
+        this.serviceId = requireOption(metadata, 'serviceId');
         this.correlationId = metadata.correlationId || null;
         this.userId = metadata.userId || null;
         this.traceId = metadata.traceId || null;

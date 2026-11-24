@@ -1,3 +1,10 @@
+function requireOption(source, name) {
+  if (source === undefined || source === null || source[name] === undefined || source[name] === null) {
+    throw new Error(`Missing required option '${name}'`);
+  }
+  return source[name];
+}
+
 /**
  * Deployment Stamps Pattern
  *
@@ -23,7 +30,7 @@ class Stamp {
   constructor(id, config = {}) {
     this.id = id;
     this.config = {
-      region: config.region || 'us-east-1',
+      region: requireOption(config, 'region'),
       capacity: config.capacity || 1000,
       dedicated: config.dedicated || false,
       tenantIds: config.tenantIds || [],
@@ -184,7 +191,7 @@ class Stamp {
 class StampRouter {
   constructor(config = {}) {
     this.config = {
-      routingStrategy: config.routingStrategy || 'round-robin',
+      routingStrategy: requireOption(config, 'routingStrategy'),
       enableHealthChecks: config.enableHealthChecks !== false,
       ...config
     };
@@ -312,7 +319,7 @@ class DeploymentStamps {
       regions: config.regions || ['us-east-1', 'us-west-2', 'eu-west-1'],
       stampsPerRegion: config.stampsPerRegion || 2,
       defaultCapacity: config.defaultCapacity || 1000,
-      routingStrategy: config.routingStrategy || 'least-loaded',
+      routingStrategy: requireOption(config, 'routingStrategy'),
       ...config
     };
 

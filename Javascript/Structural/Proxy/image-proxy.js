@@ -9,6 +9,13 @@ const crypto = require('crypto');
 
 // ============= Subject Interface =============
 
+function requireOption(source, name) {
+  if (source === undefined || source === null || source[name] === undefined || source[name] === null) {
+    throw new Error(`Missing required option '${name}'`);
+  }
+  return source[name];
+}
+
 class Resource {
   async load() {
     throw new Error('Method load() must be implemented');
@@ -252,7 +259,7 @@ class ProtectionProxy {
 class LoggingProxy {
   constructor(target, options = {}) {
     this.target = target;
-    this.logLevel = options.logLevel || 'info';
+    this.logLevel = requireOption(options, 'logLevel');
     this.logs = [];
   }
 

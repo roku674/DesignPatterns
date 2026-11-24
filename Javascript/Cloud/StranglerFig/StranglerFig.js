@@ -15,12 +15,19 @@
 
 const EventEmitter = require('events');
 
+function requireOption(source, name) {
+  if (source === undefined || source === null || source[name] === undefined || source[name] === null) {
+    throw new Error(`Missing required option '${name}'`);
+  }
+  return source[name];
+}
+
 /**
  * Legacy System Proxy
  */
 class LegacySystem {
   constructor(config = {}) {
-    this.name = config.name || 'Legacy System';
+    this.name = requireOption(config, 'name');
     this.endpoints = new Map();
     this.metrics = {
       requests: 0,
@@ -65,7 +72,7 @@ class LegacySystem {
  */
 class NewSystem {
   constructor(config = {}) {
-    this.name = config.name || 'New System';
+    this.name = requireOption(config, 'name');
     this.endpoints = new Map();
     this.metrics = {
       requests: 0,

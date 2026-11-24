@@ -22,6 +22,13 @@
 
 const http = require('http');
 
+function requireOption(source, name) {
+  if (source === undefined || source === null || source[name] === undefined || source[name] === null) {
+    throw new Error(`Missing required option '${name}'`);
+  }
+  return source[name];
+}
+
 function generateUUID() {
     return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
         const r = Math.random() * 16 | 0;
@@ -203,6 +210,7 @@ class HealthChecker {
                 callback(instance.serviceId, false);
             }
         } catch (error) {
+          console.error('[Warning] ServiceDiscovery.performHealthCheck: caught error while handling the operation:', error);
             instance.markUnhealthy();
             callback(instance.serviceId, false);
         }
@@ -223,7 +231,7 @@ class HealthChecker {
 class ServiceRegistry {
     constructor(options = {}) {
         this.services = new Map();
-        this.loadBalancer = new LoadBalancer(options.loadBalancingStrategy || 'round-robin');
+        this.loadBalancer = new LoadBalancer(requireOption(options, 'loadBalancingStrategy'));
         this.healthChecker = new HealthChecker(
             options.healthCheckInterval || 10000,
             options.healthCheckTimeout || 5000

@@ -194,6 +194,7 @@ class CommandDispatcher extends EventEmitter {
         });
       }
     } catch (error) {
+      console.error('[Warning] index.processCommand: caught error while handling the operation:', error);
       if (commandMessage.canRetry()) {
         commandMessage.incrementRetry();
         this.stats.retried++;

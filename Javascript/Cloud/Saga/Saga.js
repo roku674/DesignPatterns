@@ -46,6 +46,13 @@ const ExecutionMode = {
   PARALLEL: 'parallel'
 };
 
+function requireOption(source, name) {
+  if (source === undefined || source === null || source[name] === undefined || source[name] === null) {
+    throw new Error(`Missing required option '${name}'`);
+  }
+  return source[name];
+}
+
 /**
  * Individual saga step
  */
@@ -237,7 +244,7 @@ class Saga {
    * @param {string} config.mode - Execution mode (sequential or parallel)
    */
   constructor(config = {}) {
-    this.name = config.name || 'UnnamedSaga';
+    this.name = requireOption(config, 'name');
     this.mode = config.mode || ExecutionMode.SEQUENTIAL;
     this.steps = [];
     this.completedSteps = [];
@@ -338,7 +345,10 @@ class Saga {
     const promises = this.steps.map(step =>
       step.run(this.context)
         .then(result => ({ step, result, success: true }))
-        .catch(error => ({ step, error, success: false }))
+        .catch(error => {
+          console.error('[Warning] Saga: step failed, recording the failure for compensation:', step, error);
+          return { step, error, success: false };
+        })
     );
 
     const results = await Promise.all(promises);
